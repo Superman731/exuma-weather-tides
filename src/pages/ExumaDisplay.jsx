@@ -10,7 +10,7 @@ import OceanRealityCard from '@/components/exuma/OceanRealityCard';
 import SunDaylightCard from '@/components/exuma/SunDaylightCard';
 import MoonCard from '@/components/exuma/MoonCard';
 import SkySpaceCard from '@/components/exuma/SkySpaceCard';
-import EnhancedWeatherCard from '@/components/exuma/EnhancedWeatherCard';
+
 import IslandContextCard from '@/components/exuma/IslandContextCard';
 import LifestyleCard from '@/components/exuma/LifestyleCard';
 import SystemStatusCard from '@/components/exuma/SystemStatusCard';
@@ -35,11 +35,15 @@ export default function ExumaDisplay() {
     
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Get comprehensive ACCURATE real-time data for Georgetown, Exuma, Bahamas (23.5° N, 75.8° W) for TODAY ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}. 
+        prompt: `CRITICAL: Pull ACTUAL REAL-TIME DATA for Georgetown, Exuma, Bahamas (23.5° N, 75.8° W) for TODAY ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.
 
-Search authoritative sources like weather.com, NOAA, timeanddate.com, etc.
+DO NOT GUESS OR ESTIMATE. Use web search to get CURRENT data from these AUTHORITATIVE sources:
+- Tides: NOAA tide predictions (tidesandcurrents.noaa.gov) or XTide data for Georgetown
+- Weather: weather.com or National Weather Service for exact current conditions and 7-day forecast
+- Astronomy: timeanddate.com sun/moon data for Georgetown, Exuma
+- Ocean conditions: NOAA buoy data or Caribbean marine forecasts
 
-Provide ALL of the following data:
+Search the web NOW and provide ACTUAL CURRENT data:
 
 WEATHER:
 - Current temp (°F), feels like temp, condition, wind speed (mph), wind gusts (mph), wind direction (e.g., "NE"), humidity %, cloud cover %, rain chance %, rain forecast by hour
@@ -343,12 +347,11 @@ Be thorough and accurate. Use real data from authoritative sources.`,
             <OceanRealityCard oceanData={oceanData} isLoading={isLoading} />
             <TideCard tides={tides} isLoading={isLoading} />
 
-            {/* Row 2: Enhanced weather & sun */}
-            <EnhancedWeatherCard weather={weather} isLoading={isLoading} />
+            {/* Astronomy & Sun */}
+            <AstronomyCard astronomy={astronomy} isLoading={isLoading} />
             <div className="lg:col-span-2">
               <SunDaylightCard sunData={sunData} isLoading={isLoading} />
             </div>
-            <AstronomyCard astronomy={astronomy} isLoading={isLoading} />
 
             {/* Row 3: Moon & sky */}
             <MoonCard moonData={moonData} isLoading={isLoading} />
