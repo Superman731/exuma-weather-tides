@@ -19,13 +19,27 @@ export default function ExumaDisplay() {
     
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Get current real-time data for Exuma, Bahamas (coordinates: 23.5° N, 75.8° W) for today's date. I need:
+        prompt: `Get ACCURATE real-time data for Georgetown, Exuma, Bahamas (23.5° N, 75.8° W) for TODAY ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}. 
 
-1. Current weather: temperature in Fahrenheit, condition (sunny/cloudy/rain etc), wind speed in mph, humidity percentage
-2. Today's tide times: next high tide time and low tide time in 12-hour format (e.g., "6:42 AM"), include approximate heights
-3. Astronomy: today's sunrise time, sunset time, and current moon phase name
+IMPORTANT: Search for and use authoritative sources like weather.com, NOAA tide predictions, timeanddate.com, or official weather services. The data must be as accurate as possible.
 
-Provide accurate, current data for the Exuma region. Use realistic typical values for Exuma if exact real-time data isn't available.`,
+1. CURRENT WEATHER for Exuma, Bahamas:
+   - Current temperature in °F
+   - Current condition (Sunny/Cloudy/Partly Cloudy/Rain/etc)
+   - Current wind speed in mph
+   - Current humidity percentage
+
+2. TODAY'S TIDE TIMES for Georgetown, Exuma (San Salvador reporting station if needed):
+   - Next or today's HIGH tide time in 12-hour format (e.g., "3:10 AM") with height in meters
+   - Next or today's LOW tide time in 12-hour format (e.g., "9:42 AM") with height in meters
+   - Use official tide prediction data
+
+3. TODAY'S ASTRONOMY for Exuma:
+   - Today's actual sunrise time (e.g., "6:44 AM")
+   - Today's actual sunset time (e.g., "5:47 PM") 
+   - Current moon phase (e.g., "Waxing Gibbous", "First Quarter", etc)
+
+Search the web thoroughly for the most current and accurate data from official sources. Do not estimate or use typical values.`,
         add_context_from_internet: true,
         response_json_schema: {
           type: "object",
