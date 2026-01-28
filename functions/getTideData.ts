@@ -1,36 +1,101 @@
 export default async function getTideData() {
-  // Tropic of Cancer Beach, Exuma coordinates
   const latitude = 23.4334;
   const longitude = -75.6932;
+  const retrievedAt = new Date().toISOString();
   
   try {
-    // WorldTides API - free tier allows limited requests
     const response = await fetch(
-      `https://www.worldtides.info/api/v3?heights&extremes&lat=${latitude}&lon=${longitude}&key=f8e0ea4a-d7f5-48fc-9baa-1c9d8dcf232d`
+      `https://www.worldtides.info/api/v3?heights&extremes&lat=${latitude}&lon=${longitude}&key=f8e0ea4a-d7f5-48fc-9baa-1c9d8dcf232d`,
+      { timeout: 10000 }
     );
     
     if (!response.ok) {
-      throw new Error('Tide API failed');
+      return {
+        ok: false,
+        source: "WorldTides",
+        retrievedAt,
+        lat: latitude,
+        lon: longitude,
+        units: {},
+        data: null,
+        error: {
+          status: response.status,
+          message: "WorldTides API request failed",
+          details: `HTTP ${response.status}: ${response.statusText}`
+        }
+      };
     }
     
-    const data = await response.json();
+    const apiData = await response.json();
     
-    // Get today's extremes (highs and lows)
+    if (apiData.error) {
+      return {
+        ok: false,
+        source: "WorldTides",
+        retrievedAt,
+        lat: latitude,
+        lon: longitude,
+        units: {},
+        data: null,
+        error: {
+          status: 500,
+          message: "WorldTides returned error",
+          details: apiData.error
+        }
+      };
+    }
+    
     const now = new Date();
-    const todayExtremes = data.extremes?.filter(extreme => {
+    const todayExtremes = (apiData.extremes || []).filter(extreme => {
       const extremeDate = new Date(extreme.dt * 1000);
       return extremeDate.toDateString() === now.toDateString();
-    }) || [];
+    });
     
     const highTides = todayExtremes.filter(e => e.type === 'High');
     const lowTides = todayExtremes.filter(e => e.type === 'Low');
     
-    // Find next high and low tide
     const nextHigh = highTides.find(t => new Date(t.dt * 1000) > now) || highTides[0];
     const nextLow = lowTides.find(t => new Date(t.dt * 1000) > now) || lowTides[0];
     
-    if (nextHigh && nextLow) {
+    // Determine tide status (rising/falling/slack)
+    let tideStatus = "Unknown";
+    if (apiData.heights && apiData.heights.length >= 2) {
+      const recentHeights = apiData.heights.slice(-2);
+      if (recentHeights[1].height > recentHeights[0].height) {
+        tideStatus = "Rising";
+      } else if (recentHeights[1].height < recentHeights[0].height) {
+        tideStatus = "Falling";
+      } else {
+        tideStatus = "Slack";
+      }
+    }
+    
+    if (!nextHigh || !nextLow) {
       return {
+        ok: false,
+        source: "WorldTides",
+        retrievedAt,
+        lat: latitude,
+        lon: longitude,
+        units: { height: "feet" },
+        data: null,
+        error: {
+          status: 500,
+          message: "No tide extremes found for today",
+          details: "API returned data but no high/low tides for current date"
+        }
+      };
+    }
+    
+    return {
+      ok: true,
+      source: "WorldTides",
+      retrievedAt,
+      sourceTimestamp: apiData.requestDateTime || null,
+      lat: latitude,
+      lon: longitude,
+      units: { height: "feet" },
+      data: {
         highTide: new Date(nextHigh.dt * 1000).toLocaleTimeString('en-US', { 
           hour: 'numeric', 
           minute: '2-digit', 
@@ -44,18 +109,36 @@ export default async function getTideData() {
           hour12: true,
           timeZone: 'America/Nassau'
         }),
-        lowTideHeight: `${(nextLow.height * 3.28084).toFixed(1)} ft`
-      };
-    }
+        lowTideHeight: `${(nextLow.height * 3.28084).toFixed(1)} ft`,
+        tideStatus,
+        allTodayTides: todayExtremes.map(e => ({
+          type: e.type,
+          time: new Date(e.dt * 1000).toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit', 
+            hour12: true,
+            timeZone: 'America/Nassau'
+          }),
+          height: `${(e.height * 3.28084).toFixed(1)} ft`
+        }))
+      },
+      error: null
+    };
+    
   } catch (error) {
-    console.error('Tide API error:', error);
+    return {
+      ok: false,
+      source: "WorldTides",
+      retrievedAt,
+      lat: latitude,
+      lon: longitude,
+      units: {},
+      data: null,
+      error: {
+        status: 500,
+        message: "Network error or timeout",
+        details: error.message
+      }
+    };
   }
-  
-  // Fallback to static data for Jan 28, 2026
-  return {
-    highTide: '1:00 PM',
-    highTideHeight: '2.5 ft',
-    lowTide: '7:00 AM',
-    lowTideHeight: '0.5 ft'
-  };
 }
