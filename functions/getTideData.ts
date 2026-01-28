@@ -1,5 +1,6 @@
 import { httpGetJson } from './_httpHelper.ts';
 
+// Tide data endpoint for Exuma (WorldTides API)
 Deno.serve(async (req) => {
   const latitude = 23.439714577294154;
   const longitude = -75.60141194341342;

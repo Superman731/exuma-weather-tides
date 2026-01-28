@@ -1,5 +1,6 @@
 import { httpGetJson } from './_httpHelper.ts';
 
+// Astronomy data endpoint for Exuma (Sunrise-Sunset API)
 Deno.serve(async (req) => {
   const latitude = 23.439714577294154;
   const longitude = -75.60141194341342;
