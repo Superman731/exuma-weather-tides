@@ -46,11 +46,11 @@ export default function AstronomyCard({ response, isLoading }) {
       <div className="flex items-center gap-2 mb-6">
         <Moon className="w-5 h-5 text-amber-200" />
         <h3 className="text-sky-200/80 uppercase tracking-widest text-xs font-medium">
-          Astronomy
+          Picturesque Moments
         </h3>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="text-center p-4 bg-gradient-to-b from-amber-500/10 to-transparent rounded-2xl">
           <Sunrise className="w-8 h-8 text-amber-400 mx-auto mb-2" strokeWidth={1.5} />
           <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-1">Sunrise</p>
@@ -67,6 +67,38 @@ export default function AstronomyCard({ response, isLoading }) {
           <Sun className="w-8 h-8 text-yellow-300 mx-auto mb-2" strokeWidth={1.5} />
           <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-1">Solar Noon</p>
           <p className="text-white text-lg font-light">{astronomy.solarNoon || '--:--'}</p>
+        </div>
+      </div>
+
+      <div className="space-y-2 mb-6">
+        <p className="text-sky-200/60 text-xs uppercase tracking-wider">Golden & Blue Hours</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
+            <p className="text-sky-200/60 text-xs uppercase tracking-wider">Golden Hour</p>
+            <p className="text-white text-sm font-light">{astronomy.civilTwilight?.end || '--'}</p>
+          </div>
+          <div className="p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
+            <p className="text-sky-200/60 text-xs uppercase tracking-wider">Blue Hour</p>
+            <p className="text-white text-sm font-light">{astronomy.nauticalTwilight?.begin || '--'}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-sky-200/60 text-xs uppercase tracking-wider">Twilight Phases</p>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+            <span className="text-sky-200/70 text-xs">Civil</span>
+            <span className="text-white text-sm font-light">{astronomy.civilTwilight?.end || '--'}</span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+            <span className="text-sky-200/70 text-xs">Nautical</span>
+            <span className="text-white text-sm font-light">{astronomy.nauticalTwilight?.end || '--'}</span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+            <span className="text-sky-200/70 text-xs">Astronomical</span>
+            <span className="text-white text-sm font-light">{astronomy.astronomicalTwilight?.end || '--'}</span>
+          </div>
         </div>
       </div>
 

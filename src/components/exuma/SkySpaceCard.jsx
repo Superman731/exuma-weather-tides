@@ -56,32 +56,36 @@ export default function SkySpaceCard({ response, isLoading }) {
           </div>
         )}
 
-        {skyData?.stargazingWindow && (
-          <div className="p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-            <p className="text-indigo-200/90 text-sm font-medium mb-1">Best Stargazing</p>
-            <p className="text-indigo-100/80 text-sm">{skyData.stargazingWindow}</p>
-          </div>
-        )}
-
-        {skyData?.constellation && (
+        {skyData?.constellations && skyData.constellations.length > 0 && (
           <div className="p-3 bg-white/5 rounded-xl">
-            <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-2">Constellation Highlight</p>
-            <p className="text-white font-light">{skyData.constellation}</p>
+            <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-2">Constellations</p>
+            <p className="text-white font-light">{skyData.constellations.join(', ')}</p>
           </div>
         )}
 
-        {skyData?.milkyWayVisibility && (
-          <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-            <span className="text-sky-200/70 text-sm">Milky Way Visibility</span>
-            <span className={`font-medium ${
-              skyData.milkyWayVisibility === 'Excellent' ? 'text-purple-300' :
-              skyData.milkyWayVisibility === 'Good' ? 'text-indigo-300' :
-              skyData.milkyWayVisibility === 'Fair' ? 'text-sky-300' : 'text-gray-400'
-            }`}>
-              {skyData.milkyWayVisibility}
-            </span>
+        <div className="p-4 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-2xl border border-purple-500/20">
+          <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-3">Night Sky Visibility</p>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sky-200/70 text-sm">Milky Way</span>
+              <span className={`text-sm font-medium ${
+                skyData?.milkyWayVisible ? 'text-purple-300' : 'text-gray-400'
+              }`}>
+                {skyData?.milkyWayVisible ? 'Visible' : 'Hidden'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sky-200/70 text-sm">Star Visibility</span>
+              <span className={`text-sm font-medium ${
+                skyData?.skyQuality === 'Excellent' ? 'text-purple-300' :
+                skyData?.skyQuality === 'Good' ? 'text-indigo-300' :
+                skyData?.skyQuality === 'Fair' ? 'text-sky-300' : 'text-gray-400'
+              }`}>
+                {skyData?.skyQuality || 'Moderate'}
+              </span>
+            </div>
           </div>
-        )}
+        </div>
 
         {skyData?.meteorShower && (
           <div className="p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
