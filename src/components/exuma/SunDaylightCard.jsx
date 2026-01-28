@@ -62,47 +62,41 @@ export default function SunDaylightCard({ response, isLoading }) {
           <p className="text-white text-2xl font-light">{sunData.daylightLength || '--'}</p>
         </div>
 
-        {sunData.goldenHour && (
-          <div className="p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20">
-            <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-2">Golden Hour</p>
-            <p className="text-white text-sm font-light">{sunData.goldenHour}</p>
-          </div>
-        )}
+        <div className="p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20">
+          <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-2">Golden Hour</p>
+          <p className="text-white text-sm font-light">{sunData.civilTwilight?.end || '--'}</p>
+        </div>
 
-        {sunData.solarNoon && (
-          <div className="p-4 bg-white/5 rounded-2xl">
-            <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-2">Solar Noon</p>
-            <p className="text-white text-lg font-light">{sunData.solarNoon}</p>
-          </div>
-        )}
+        <div className="p-4 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
+          <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-2">Blue Hour</p>
+          <p className="text-white text-sm font-light">{sunData.nauticalTwilight?.begin || '--'}</p>
+        </div>
       </div>
 
-      {sunData.twilight && (
-        <div className="space-y-2">
-          <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-3">Twilight</p>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-sky-400/60"></div>
-            <span className="text-sky-200/60 text-xs flex-1">Civil</span>
-            <span className="text-white text-sm font-light">
-              {sunData.twilight.civilEnd || '--'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-indigo-400/60"></div>
-            <span className="text-sky-200/60 text-xs flex-1">Nautical</span>
-            <span className="text-white text-sm font-light">
-              {sunData.twilight.nauticalEnd || '--'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-purple-400/60"></div>
-            <span className="text-sky-200/60 text-xs flex-1">Astronomical</span>
-            <span className="text-white text-sm font-light">
-              {sunData.twilight.astronomicalEnd || '--'}
-            </span>
-          </div>
+      <div className="space-y-2">
+        <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-3">Twilight</p>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-sky-400/60"></div>
+          <span className="text-sky-200/60 text-xs flex-1">Civil</span>
+          <span className="text-white text-sm font-light">
+            {sunData.civilTwilight?.end || '--'}
+          </span>
         </div>
-      )}
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-indigo-400/60"></div>
+          <span className="text-sky-200/60 text-xs flex-1">Nautical</span>
+          <span className="text-white text-sm font-light">
+            {sunData.nauticalTwilight?.end || '--'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-purple-400/60"></div>
+          <span className="text-sky-200/60 text-xs flex-1">Astronomical</span>
+          <span className="text-white text-sm font-light">
+            {sunData.astronomicalTwilight?.end || '--'}
+          </span>
+        </div>
+      </div>
 
       <CardFooter
         source={response.source}

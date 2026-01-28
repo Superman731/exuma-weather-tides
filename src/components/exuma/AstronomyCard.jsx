@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sunrise, Sunset, Moon, AlertCircle } from 'lucide-react';
+import { Sunrise, Sunset, Sun, Moon, AlertCircle } from 'lucide-react';
 import CardFooter from './CardFooter';
 
 export default function AstronomyCard({ response, isLoading }) {
@@ -50,7 +50,7 @@ export default function AstronomyCard({ response, isLoading }) {
         </h3>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="text-center p-4 bg-gradient-to-b from-amber-500/10 to-transparent rounded-2xl">
           <Sunrise className="w-8 h-8 text-amber-400 mx-auto mb-2" strokeWidth={1.5} />
           <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-1">Sunrise</p>
@@ -61,6 +61,12 @@ export default function AstronomyCard({ response, isLoading }) {
           <Sunset className="w-8 h-8 text-orange-400 mx-auto mb-2" strokeWidth={1.5} />
           <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-1">Sunset</p>
           <p className="text-white text-lg font-light">{astronomy.sunset || '--:--'}</p>
+        </div>
+
+        <div className="text-center p-4 bg-white/5 rounded-2xl">
+          <Sun className="w-8 h-8 text-yellow-300 mx-auto mb-2" strokeWidth={1.5} />
+          <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-1">Solar Noon</p>
+          <p className="text-white text-lg font-light">{astronomy.solarNoon || '--:--'}</p>
         </div>
       </div>
 

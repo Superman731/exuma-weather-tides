@@ -57,10 +57,10 @@ export default function TideCard({ response, isLoading }) {
             </div>
             <div>
               <p className="text-sky-200/60 text-xs uppercase tracking-wider">High Tide</p>
-              <p className="text-white text-xl font-light">{tides.highTide || '--:--'}</p>
+              <p className="text-white text-xl font-light">{tides.nextHigh?.time || '--:--'}</p>
             </div>
           </div>
-          <p className="text-sky-100/50 text-sm">{tides.highTideHeight || ''}</p>
+          <p className="text-sky-100/50 text-sm">{tides.nextHigh?.height || ''}</p>
         </div>
 
         <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl">
@@ -70,10 +70,10 @@ export default function TideCard({ response, isLoading }) {
             </div>
             <div>
               <p className="text-sky-200/60 text-xs uppercase tracking-wider">Low Tide</p>
-              <p className="text-white text-xl font-light">{tides.lowTide || '--:--'}</p>
+              <p className="text-white text-xl font-light">{tides.nextLow?.time || '--:--'}</p>
             </div>
           </div>
-          <p className="text-sky-100/50 text-sm">{tides.lowTideHeight || ''}</p>
+          <p className="text-sky-100/50 text-sm">{tides.nextLow?.height || ''}</p>
         </div>
 
         {tides.tideStatus && (
