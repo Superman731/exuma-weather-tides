@@ -1,4 +1,4 @@
-import { httpGetJson } from './_httpHelper.js';
+import { httpGetJson } from './_httpHelper.ts';
 
 Deno.serve(async (req) => {
   const latitude = 23.439714577294154;

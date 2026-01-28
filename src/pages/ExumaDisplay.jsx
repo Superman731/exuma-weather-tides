@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { callFunction } from '@/components/exuma/functionPathResolver';
 import TimeDisplay from '@/components/exuma/TimeDisplay';
+import StatusIndicator from '@/components/exuma/StatusIndicator';
 import WeatherForecastCard from '@/components/exuma/WeatherForecastCard';
 import TideCard from '@/components/exuma/TideCard';
 import AstronomyCard from '@/components/exuma/AstronomyCard';
@@ -14,7 +15,8 @@ import SkySpaceCard from '@/components/exuma/SkySpaceCard';
 import BackendProbe from '@/components/exuma/BackendProbe';
 
 export default function ExumaDisplay() {
-  const [showProbe, setShowProbe] = useState(true);
+  const [debugMode, setDebugMode] = useState(false);
+  const [showProbe, setShowProbe] = useState(false);
   const [weatherResponse, setWeatherResponse] = useState(null);
   const [tideResponse, setTideResponse] = useState(null);
   const [astronomyResponse, setAstronomyResponse] = useState(null);
@@ -181,6 +183,8 @@ export default function ExumaDisplay() {
         <div className="absolute -bottom-40 right-1/3 w-72 h-72 bg-amber-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
+      <StatusIndicator />
+      
       <div className="relative z-10 min-h-screen p-4 md:p-8 lg:p-12">
         <header className="mb-8 md:mb-12">
           <TimeDisplay />
@@ -244,8 +248,27 @@ export default function ExumaDisplay() {
         </main>
       </div>
 
-      <DebugPanel apiCalls={apiCalls} />
-      {showProbe && <BackendProbe />}
+      {debugMode && (
+        <>
+          <DebugPanel apiCalls={apiCalls} />
+          {showProbe && <BackendProbe />}
+          <button
+            onClick={() => setDebugMode(false)}
+            className="fixed bottom-4 left-4 z-50 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-sm"
+          >
+            Hide Debug
+          </button>
+        </>
+      )}
+      
+      {!debugMode && (
+        <button
+          onClick={() => setDebugMode(true)}
+          className="fixed bottom-4 left-4 z-50 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-sm opacity-50 hover:opacity-100"
+        >
+          Debug
+        </button>
+      )}
     </div>
   );
 }
