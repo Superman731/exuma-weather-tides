@@ -11,8 +11,10 @@ import MoonCard from '@/components/exuma/MoonCard';
 import SystemStatusCard from '@/components/exuma/SystemStatusCard';
 import DebugPanel from '@/components/exuma/DebugPanel';
 import SkySpaceCard from '@/components/exuma/SkySpaceCard';
+import BackendProbe from '@/components/exuma/BackendProbe';
 
 export default function ExumaDisplay() {
+  const [showProbe, setShowProbe] = useState(true);
   const [weatherResponse, setWeatherResponse] = useState(null);
   const [tideResponse, setTideResponse] = useState(null);
   const [astronomyResponse, setAstronomyResponse] = useState(null);
@@ -29,7 +31,7 @@ export default function ExumaDisplay() {
     const calls = [];
     
     try {
-      // Healthcheck first
+      // Healthcheck first - capture raw response
       const healthStart = Date.now();
       const healthStartTime = new Date().toISOString();
       try {
@@ -40,12 +42,13 @@ export default function ExumaDisplay() {
           startTime: healthStartTime,
           endTime: new Date().toISOString(),
           duration: healthEnd - healthStart,
-          ok: healthData.ok,
-          source: healthData.source,
-          lat: healthData.lat,
-          lon: healthData.lon,
-          error: healthData.error,
-          responsePreview: JSON.stringify(healthData).substring(0, 300)
+          ok: healthData?.ok || false,
+          source: healthData?.source || 'unknown',
+          lat: healthData?.lat,
+          lon: healthData?.lon,
+          error: healthData?.error,
+          responsePreview: JSON.stringify(healthData).substring(0, 300),
+          rawResponse: typeof healthData === 'string' ? healthData : JSON.stringify(healthData)
         });
       } catch (error) {
         calls.push({
@@ -55,8 +58,13 @@ export default function ExumaDisplay() {
           duration: Date.now() - healthStart,
           ok: false,
           source: 'Error',
-          error: { message: 'Exception', details: error.message },
-          responsePreview: ''
+          error: { 
+            message: error.message || 'Exception', 
+            details: error.stack || JSON.stringify(error),
+            rawError: String(error)
+          },
+          responsePreview: '',
+          rawResponse: String(error)
         });
       }
 
@@ -387,6 +395,7 @@ export default function ExumaDisplay() {
       </div>
 
       <DebugPanel apiCalls={apiCalls} />
+      {showProbe && <BackendProbe />}
     </div>
   );
 }

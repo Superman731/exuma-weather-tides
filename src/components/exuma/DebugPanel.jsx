@@ -73,7 +73,14 @@ export default function DebugPanel({ apiCalls = [] }) {
                 </div>
               )}
               
-              {call.responsePreview && (
+              {call.rawResponse && (
+                <div className="mt-2 p-2 bg-gray-800 rounded text-gray-300 max-h-32 overflow-y-auto">
+                  <div className="text-gray-500 mb-1">Raw Response:</div>
+                  <pre className="whitespace-pre-wrap break-words text-xs">{call.rawResponse.substring(0, 500)}</pre>
+                </div>
+              )}
+              
+              {call.responsePreview && !call.rawResponse && (
                 <div className="mt-2 p-2 bg-gray-800 rounded text-gray-300 max-h-24 overflow-y-auto">
                   <div className="text-gray-500 mb-1">Response (first 300 chars):</div>
                   <pre className="whitespace-pre-wrap break-words">{call.responsePreview}</pre>
