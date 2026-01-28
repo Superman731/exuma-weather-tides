@@ -47,8 +47,14 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import ExumaDisplay from './pages/ExumaDisplay';
 
-export const pagesConfig = {
-	Pages: {}
+
+export const PAGES = {
+    "ExumaDisplay": ExumaDisplay,
 }
 
+export const pagesConfig = {
+    mainPage: "ExumaDisplay",
+    Pages: PAGES,
+};
