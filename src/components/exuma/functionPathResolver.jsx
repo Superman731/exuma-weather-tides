@@ -16,7 +16,7 @@ async function discoverBasePath() {
   
   for (const basePath of candidates) {
     try {
-      const response = await fetch(`${basePath}/ping`, {
+      const response = await fetch(`${basePath}/ping?action=health`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})
