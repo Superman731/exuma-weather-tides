@@ -51,7 +51,9 @@ export default function WeatherCard({ weather, isLoading }) {
       <div className="flex gap-6 mt-6 pt-6 border-t border-white/10">
         <div className="flex items-center gap-2">
           <Wind className="w-4 h-4 text-sky-300/60" />
-          <span className="text-sky-100/70 text-sm">{weather?.wind || '--'} mph</span>
+          <span className="text-sky-100/70 text-sm">
+            {typeof weather?.wind === 'object' ? weather.wind.speed : weather?.wind || '--'} mph
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <Droplets className="w-4 h-4 text-sky-300/60" />
