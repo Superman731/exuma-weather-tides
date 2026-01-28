@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import TimeDisplay from '@/components/exuma/TimeDisplay';
 import WeatherCard from '@/components/exuma/WeatherCard';
+import WeatherForecastCard from '@/components/exuma/WeatherForecastCard';
 import TideCard from '@/components/exuma/TideCard';
 import AstronomyCard from '@/components/exuma/AstronomyCard';
 import FunFactCard from '@/components/exuma/FunFactCard';
@@ -16,6 +17,7 @@ import SystemStatusCard from '@/components/exuma/SystemStatusCard';
 
 export default function ExumaDisplay() {
   const [weather, setWeather] = useState(null);
+  const [forecastData, setForecastData] = useState(null);
   const [tides, setTides] = useState(null);
   const [astronomy, setAstronomy] = useState(null);
   const [oceanData, setOceanData] = useState(null);
@@ -41,6 +43,11 @@ Provide ALL of the following data:
 
 WEATHER:
 - Current temp (°F), feels like temp, condition, wind speed (mph), wind gusts (mph), wind direction (e.g., "NE"), humidity %, cloud cover %, rain chance %, rain forecast by hour
+
+WEATHER FORECAST:
+- Today split into Day and Night with: temp, condition, description, rain chance %, wind speed, humidity, UV index
+- Include sunrise, sunset, moonrise, moonset, moon phase for today
+- 7-day forecast (starting tomorrow) with: date (e.g., "Thu 29"), high/low temps, condition, rain chance %
 
 OCEAN:
 - Tide status now (Rising/Falling/Slack)
@@ -98,6 +105,67 @@ Be thorough and accurate. Use real data from authoritative sources.`,
                 cloudCover: { type: "number" },
                 rainChance: { type: "number" },
                 rainByHour: { type: "string" }
+              }
+            },
+            forecastData: {
+              type: "object",
+              properties: {
+                current: {
+                  type: "object",
+                  properties: {
+                    temp: { type: "number" },
+                    feelsLike: { type: "number" },
+                    humidity: { type: "number" },
+                    cloudCover: { type: "number" },
+                    rainChance: { type: "number" }
+                  }
+                },
+                today: {
+                  type: "object",
+                  properties: {
+                    day: {
+                      type: "object",
+                      properties: {
+                        temp: { type: "number" },
+                        condition: { type: "string" },
+                        description: { type: "string" },
+                        rainChance: { type: "number" },
+                        windSpeed: { type: "number" },
+                        humidity: { type: "number" },
+                        uvIndex: { type: "number" }
+                      }
+                    },
+                    night: {
+                      type: "object",
+                      properties: {
+                        temp: { type: "number" },
+                        condition: { type: "string" },
+                        description: { type: "string" },
+                        rainChance: { type: "number" },
+                        windSpeed: { type: "number" },
+                        humidity: { type: "number" }
+                      }
+                    },
+                    sunrise: { type: "string" },
+                    sunset: { type: "string" },
+                    moonrise: { type: "string" },
+                    moonset: { type: "string" },
+                    moonPhase: { type: "string" }
+                  }
+                },
+                forecast: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      date: { type: "string" },
+                      high: { type: "number" },
+                      low: { type: "number" },
+                      condition: { type: "string" },
+                      rainChance: { type: "number" }
+                    }
+                  }
+                }
               }
             },
             oceanData: {
@@ -203,6 +271,7 @@ Be thorough and accurate. Use real data from authoritative sources.`,
       } : null;
 
       setWeather(result.weather);
+      setForecastData(result.forecastData);
       setOceanData(flattenedOceanData);
       setTides(flattenedTides);
       setSunData(result.sunData);
@@ -265,10 +334,12 @@ Be thorough and accurate. Use real data from authoritative sources.`,
         {/* Main data grid */}
         <main className="max-w-[1600px] mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-            {/* Row 1: Core weather & ocean */}
-            <div className="lg:col-span-2">
-              <WeatherCard weather={weather} isLoading={isLoading} />
+            {/* Weather Forecast - Full Width */}
+            <div className="lg:col-span-3">
+              <WeatherForecastCard forecastData={forecastData} isLoading={isLoading} />
             </div>
+            
+            {/* Ocean & Tides */}
             <OceanRealityCard oceanData={oceanData} isLoading={isLoading} />
             <TideCard tides={tides} isLoading={isLoading} />
 
