@@ -38,10 +38,10 @@ export default function ExumaDisplay() {
       // Weather
       const weatherStart = Date.now();
       const weatherStartTime = new Date().toISOString();
-      const weatherData = await callFunction('getWeatherData');
+      const weatherData = await callFunction('weather');
       setWeatherResponse(weatherData);
       calls.push({
-        functionName: 'getWeatherData',
+        functionName: 'weather',
         startTime: weatherStartTime,
         endTime: new Date().toISOString(),
         duration: Date.now() - weatherStart,
@@ -56,10 +56,10 @@ export default function ExumaDisplay() {
       // Tides
       const tideStart = Date.now();
       const tideStartTime = new Date().toISOString();
-      const tideData = await callFunction('getTideData');
+      const tideData = await callFunction('tides');
       setTideResponse(tideData);
       calls.push({
-        functionName: 'getTideData',
+        functionName: 'tides',
         startTime: tideStartTime,
         endTime: new Date().toISOString(),
         duration: Date.now() - tideStart,
@@ -74,10 +74,10 @@ export default function ExumaDisplay() {
       // Astronomy
       const astroStart = Date.now();
       const astroStartTime = new Date().toISOString();
-      const astroData = await callFunction('getAstronomyData');
+      const astroData = await callFunction('astronomy');
       setAstronomyResponse(astroData);
       calls.push({
-        functionName: 'getAstronomyData',
+        functionName: 'astronomy',
         startTime: astroStartTime,
         endTime: new Date().toISOString(),
         duration: Date.now() - astroStart,
@@ -92,10 +92,10 @@ export default function ExumaDisplay() {
       // Moon
       const moonStart = Date.now();
       const moonStartTime = new Date().toISOString();
-      const moonData = await callFunction('getMoonData');
+      const moonData = await callFunction('moon');
       setMoonResponse(moonData);
       calls.push({
-        functionName: 'getMoonData',
+        functionName: 'moon',
         startTime: moonStartTime,
         endTime: new Date().toISOString(),
         duration: Date.now() - moonStart,
@@ -110,10 +110,10 @@ export default function ExumaDisplay() {
       // Fun Fact
       const factStart = Date.now();
       const factStartTime = new Date().toISOString();
-      const factData = await callFunction('getFunFact');
+      const factData = await callFunction('funfact');
       setFunFactResponse(factData);
       calls.push({
-        functionName: 'getFunFact',
+        functionName: 'funfact',
         startTime: factStartTime,
         endTime: new Date().toISOString(),
         duration: Date.now() - factStart,
@@ -128,10 +128,10 @@ export default function ExumaDisplay() {
       // Sky & Space
       const skyStart = Date.now();
       const skyStartTime = new Date().toISOString();
-      const skyData = await callFunction('getSkyData');
+      const skyData = await callFunction('sky');
       setSkyResponse(skyData);
       calls.push({
-        functionName: 'getSkyData',
+        functionName: 'sky',
         startTime: skyStartTime,
         endTime: new Date().toISOString(),
         duration: Date.now() - skyStart,
