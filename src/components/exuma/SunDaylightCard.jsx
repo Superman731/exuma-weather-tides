@@ -16,6 +16,7 @@ export default function SunDaylightCard({ response, isLoading }) {
   }
 
   if (!response || !response.ok) {
+    const error = response?.error || {};
     return (
       <div className="bg-red-900/20 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-red-500/30">
         <div className="flex items-center gap-2 mb-4">
@@ -24,10 +25,16 @@ export default function SunDaylightCard({ response, isLoading }) {
             Sun & Daylight - Error
           </h3>
         </div>
-        <p className="text-red-200 text-sm">{response?.error?.message || 'Failed to load sun data'}</p>
-        {response?.error?.details && (
-          <p className="text-red-300/60 text-xs mt-2">{response.error.details}</p>
-        )}
+        <div className="space-y-2 text-xs font-mono">
+          <p className="text-red-200">Status: {error.status || 'Unknown'}</p>
+          {error.url && <p className="text-red-200">URL: {error.url}</p>}
+          <p className="text-red-300">{error.message || 'Failed to load sun data'}</p>
+          {error.details && (
+            <pre className="text-red-300 text-xs mt-2 overflow-x-auto whitespace-pre-wrap break-words max-h-32">
+              {error.details.substring(0, 300)}
+            </pre>
+          )}
+        </div>
         <CardFooter
           source={response?.source}
           retrievedAt={response?.retrievedAt}
