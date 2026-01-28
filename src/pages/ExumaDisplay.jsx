@@ -36,9 +36,9 @@ export default function ExumaDisplay() {
     try {
       // Call backend functions for reliable API data
       const [tideData, weatherData, astronomyData] = await Promise.all([
-        base44.functions.getTideData(),
-        base44.functions.getWeatherData(),
-        base44.functions.getAstronomyData()
+        base44.functions.invoke('getTideData', {}),
+        base44.functions.invoke('getWeatherData', {}),
+        base44.functions.invoke('getAstronomyData', {})
       ]);
 
       setWeather(weatherData.weather);
