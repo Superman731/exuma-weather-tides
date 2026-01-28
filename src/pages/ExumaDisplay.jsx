@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
-import { fetchWeatherDirect } from '@/components/exuma/WeatherFetchDirect';
+import { callFunction } from '@/components/exuma/functionPathResolver';
 import TimeDisplay from '@/components/exuma/TimeDisplay';
 import WeatherForecastCard from '@/components/exuma/WeatherForecastCard';
 import TideCard from '@/components/exuma/TideCard';
@@ -32,271 +31,148 @@ export default function ExumaDisplay() {
     const calls = [];
     
     try {
-      // Healthcheck first - capture raw response
+      // Healthcheck first
       const healthStart = Date.now();
       const healthStartTime = new Date().toISOString();
-      try {
-        const healthData = await base44.functions.invoke('getHealthcheck', {});
-        const healthEnd = Date.now();
-        calls.push({
-          functionName: 'getHealthcheck',
-          startTime: healthStartTime,
-          endTime: new Date().toISOString(),
-          duration: healthEnd - healthStart,
-          ok: healthData?.ok || false,
-          source: healthData?.source || 'unknown',
-          lat: healthData?.lat,
-          lon: healthData?.lon,
-          error: healthData?.error,
-          responsePreview: JSON.stringify(healthData).substring(0, 300),
-          rawResponse: typeof healthData === 'string' ? healthData : JSON.stringify(healthData)
-        });
-      } catch (error) {
-        calls.push({
-          functionName: 'getHealthcheck',
-          startTime: healthStartTime,
-          endTime: new Date().toISOString(),
-          duration: Date.now() - healthStart,
-          ok: false,
-          source: 'Error',
-          error: { 
-            message: error.message || 'Exception', 
-            details: error.stack || JSON.stringify(error),
-            rawError: String(error)
-          },
-          responsePreview: '',
-          rawResponse: String(error)
-        });
-      }
+      const healthData = await callFunction('getHealthcheck');
+      calls.push({
+        functionName: 'getHealthcheck',
+        startTime: healthStartTime,
+        endTime: new Date().toISOString(),
+        duration: Date.now() - healthStart,
+        ok: healthData?.ok || false,
+        source: healthData?.source || 'unknown',
+        lat: healthData?.lat,
+        lon: healthData?.lon,
+        error: healthData?.error,
+        responsePreview: JSON.stringify(healthData).substring(0, 300),
+        rawResponse: JSON.stringify(healthData._debug)
+      });
 
       // Test External Fetch
       const testStart = Date.now();
       const testStartTime = new Date().toISOString();
-      try {
-        const testData = await base44.functions.invoke('testExternalFetch', {});
-        const testEnd = Date.now();
-        calls.push({
-          functionName: 'testExternalFetch',
-          startTime: testStartTime,
-          endTime: new Date().toISOString(),
-          duration: testEnd - testStart,
-          ok: testData.ok,
-          source: testData.source,
-          lat: testData.lat,
-          lon: testData.lon,
-          error: testData.error,
-          responsePreview: JSON.stringify(testData).substring(0, 300)
-        });
-      } catch (error) {
-        calls.push({
-          functionName: 'testExternalFetch',
-          startTime: testStartTime,
-          endTime: new Date().toISOString(),
-          duration: Date.now() - testStart,
-          ok: false,
-          source: 'Error',
-          error: { message: 'Exception', details: error.message },
-          responsePreview: ''
-        });
-      }
+      const testData = await callFunction('testExternalFetch');
+      calls.push({
+        functionName: 'testExternalFetch',
+        startTime: testStartTime,
+        endTime: new Date().toISOString(),
+        duration: Date.now() - testStart,
+        ok: testData.ok,
+        source: testData.source,
+        lat: testData.lat,
+        lon: testData.lon,
+        error: testData.error,
+        responsePreview: JSON.stringify(testData).substring(0, 300)
+      });
 
       // Weather
       const weatherStart = Date.now();
       const weatherStartTime = new Date().toISOString();
-      try {
-        const weatherData = await base44.functions.invoke('getWeatherData', {});
-        const weatherEnd = Date.now();
-        setWeatherResponse(weatherData);
-        calls.push({
-          functionName: 'getWeatherData',
-          startTime: weatherStartTime,
-          endTime: new Date().toISOString(),
-          duration: weatherEnd - weatherStart,
-          ok: weatherData.ok,
-          source: weatherData.source,
-          lat: weatherData.lat,
-          lon: weatherData.lon,
-          error: weatherData.error,
-          responsePreview: JSON.stringify(weatherData).substring(0, 300)
-        });
-      } catch (error) {
-        setWeatherResponse({ ok: false, error: { message: error.message, details: error.stack } });
-        calls.push({
-          functionName: 'getWeatherData',
-          startTime: weatherStartTime,
-          endTime: new Date().toISOString(),
-          duration: Date.now() - weatherStart,
-          ok: false,
-          source: 'Error',
-          error: { message: 'Exception', details: error.message },
-          responsePreview: ''
-        });
-      }
+      const weatherData = await callFunction('getWeatherData');
+      setWeatherResponse(weatherData);
+      calls.push({
+        functionName: 'getWeatherData',
+        startTime: weatherStartTime,
+        endTime: new Date().toISOString(),
+        duration: Date.now() - weatherStart,
+        ok: weatherData.ok,
+        source: weatherData.source,
+        lat: weatherData.lat,
+        lon: weatherData.lon,
+        error: weatherData.error,
+        responsePreview: JSON.stringify(weatherData).substring(0, 300)
+      });
 
       // Tides
       const tideStart = Date.now();
       const tideStartTime = new Date().toISOString();
-      try {
-        const tideData = await base44.functions.invoke('getTideData', {});
-        const tideEnd = Date.now();
-        setTideResponse(tideData);
-        calls.push({
-          functionName: 'getTideData',
-          startTime: tideStartTime,
-          endTime: new Date().toISOString(),
-          duration: tideEnd - tideStart,
-          ok: tideData.ok,
-          source: tideData.source,
-          lat: tideData.lat,
-          lon: tideData.lon,
-          error: tideData.error,
-          responsePreview: JSON.stringify(tideData).substring(0, 300)
-        });
-      } catch (error) {
-        setTideResponse({ ok: false, error: { message: error.message, details: error.stack } });
-        calls.push({
-          functionName: 'getTideData',
-          startTime: tideStartTime,
-          endTime: new Date().toISOString(),
-          duration: Date.now() - tideStart,
-          ok: false,
-          source: 'Error',
-          error: { message: 'Exception', details: error.message },
-          responsePreview: ''
-        });
-      }
+      const tideData = await callFunction('getTideData');
+      setTideResponse(tideData);
+      calls.push({
+        functionName: 'getTideData',
+        startTime: tideStartTime,
+        endTime: new Date().toISOString(),
+        duration: Date.now() - tideStart,
+        ok: tideData.ok,
+        source: tideData.source,
+        lat: tideData.lat,
+        lon: tideData.lon,
+        error: tideData.error,
+        responsePreview: JSON.stringify(tideData).substring(0, 300)
+      });
 
       // Astronomy
       const astroStart = Date.now();
       const astroStartTime = new Date().toISOString();
-      try {
-        const astroData = await base44.functions.invoke('getAstronomyData', {});
-        const astroEnd = Date.now();
-        setAstronomyResponse(astroData);
-        calls.push({
-          functionName: 'getAstronomyData',
-          startTime: astroStartTime,
-          endTime: new Date().toISOString(),
-          duration: astroEnd - astroStart,
-          ok: astroData.ok,
-          source: astroData.source,
-          lat: astroData.lat,
-          lon: astroData.lon,
-          error: astroData.error,
-          responsePreview: JSON.stringify(astroData).substring(0, 300)
-        });
-      } catch (error) {
-        setAstronomyResponse({ ok: false, error: { message: error.message, details: error.stack } });
-        calls.push({
-          functionName: 'getAstronomyData',
-          startTime: astroStartTime,
-          endTime: new Date().toISOString(),
-          duration: Date.now() - astroStart,
-          ok: false,
-          source: 'Error',
-          error: { message: 'Exception', details: error.message },
-          responsePreview: ''
-        });
-      }
+      const astroData = await callFunction('getAstronomyData');
+      setAstronomyResponse(astroData);
+      calls.push({
+        functionName: 'getAstronomyData',
+        startTime: astroStartTime,
+        endTime: new Date().toISOString(),
+        duration: Date.now() - astroStart,
+        ok: astroData.ok,
+        source: astroData.source,
+        lat: astroData.lat,
+        lon: astroData.lon,
+        error: astroData.error,
+        responsePreview: JSON.stringify(astroData).substring(0, 300)
+      });
 
       // Moon
       const moonStart = Date.now();
       const moonStartTime = new Date().toISOString();
-      try {
-        const moonData = await base44.functions.invoke('getMoonData', {});
-        const moonEnd = Date.now();
-        setMoonResponse(moonData);
-        calls.push({
-          functionName: 'getMoonData',
-          startTime: moonStartTime,
-          endTime: new Date().toISOString(),
-          duration: moonEnd - moonStart,
-          ok: moonData.ok,
-          source: moonData.source,
-          lat: moonData.lat,
-          lon: moonData.lon,
-          error: moonData.error,
-          responsePreview: JSON.stringify(moonData).substring(0, 300)
-        });
-      } catch (error) {
-        setMoonResponse({ ok: false, error: { message: error.message, details: error.stack } });
-        calls.push({
-          functionName: 'getMoonData',
-          startTime: moonStartTime,
-          endTime: new Date().toISOString(),
-          duration: Date.now() - moonStart,
-          ok: false,
-          source: 'Error',
-          error: { message: 'Exception', details: error.message },
-          responsePreview: ''
-        });
-      }
+      const moonData = await callFunction('getMoonData');
+      setMoonResponse(moonData);
+      calls.push({
+        functionName: 'getMoonData',
+        startTime: moonStartTime,
+        endTime: new Date().toISOString(),
+        duration: Date.now() - moonStart,
+        ok: moonData.ok,
+        source: moonData.source,
+        lat: moonData.lat,
+        lon: moonData.lon,
+        error: moonData.error,
+        responsePreview: JSON.stringify(moonData).substring(0, 300)
+      });
 
       // Fun Fact
       const factStart = Date.now();
       const factStartTime = new Date().toISOString();
-      try {
-        const factData = await base44.functions.invoke('getFunFact', {});
-        const factEnd = Date.now();
-        setFunFactResponse(factData);
-        calls.push({
-          functionName: 'getFunFact',
-          startTime: factStartTime,
-          endTime: new Date().toISOString(),
-          duration: factEnd - factStart,
-          ok: factData.ok,
-          source: factData.source,
-          lat: factData.lat,
-          lon: factData.lon,
-          error: factData.error,
-          responsePreview: JSON.stringify(factData).substring(0, 300)
-        });
-      } catch (error) {
-        setFunFactResponse({ ok: false, error: { message: error.message, details: error.stack } });
-        calls.push({
-          functionName: 'getFunFact',
-          startTime: factStartTime,
-          endTime: new Date().toISOString(),
-          duration: Date.now() - factStart,
-          ok: false,
-          source: 'Error',
-          error: { message: 'Exception', details: error.message },
-          responsePreview: ''
-        });
-      }
+      const factData = await callFunction('getFunFact');
+      setFunFactResponse(factData);
+      calls.push({
+        functionName: 'getFunFact',
+        startTime: factStartTime,
+        endTime: new Date().toISOString(),
+        duration: Date.now() - factStart,
+        ok: factData.ok,
+        source: factData.source,
+        lat: factData.lat,
+        lon: factData.lon,
+        error: factData.error,
+        responsePreview: JSON.stringify(factData).substring(0, 300)
+      });
 
       // Sky & Space
       const skyStart = Date.now();
       const skyStartTime = new Date().toISOString();
-      try {
-        const skyData = await base44.functions.invoke('getSkyData', {});
-        const skyEnd = Date.now();
-        setSkyResponse(skyData);
-        calls.push({
-          functionName: 'getSkyData',
-          startTime: skyStartTime,
-          endTime: new Date().toISOString(),
-          duration: skyEnd - skyStart,
-          ok: skyData.ok,
-          source: skyData.source,
-          lat: skyData.lat,
-          lon: skyData.lon,
-          error: skyData.error,
-          responsePreview: JSON.stringify(skyData).substring(0, 300)
-        });
-      } catch (error) {
-        setSkyResponse({ ok: false, error: { message: error.message, details: error.stack } });
-        calls.push({
-          functionName: 'getSkyData',
-          startTime: skyStartTime,
-          endTime: new Date().toISOString(),
-          duration: Date.now() - skyStart,
-          ok: false,
-          source: 'Error',
-          error: { message: 'Exception', details: error.message },
-          responsePreview: ''
-        });
-      }
+      const skyData = await callFunction('getSkyData');
+      setSkyResponse(skyData);
+      calls.push({
+        functionName: 'getSkyData',
+        startTime: skyStartTime,
+        endTime: new Date().toISOString(),
+        duration: Date.now() - skyStart,
+        ok: skyData.ok,
+        source: skyData.source,
+        lat: skyData.lat,
+        lon: skyData.lon,
+        error: skyData.error,
+        responsePreview: JSON.stringify(skyData).substring(0, 300)
+      });
 
       setLastUpdated(new Date());
     } catch (error) {
