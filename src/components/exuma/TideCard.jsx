@@ -49,39 +49,35 @@ export default function TideCard({ response, isLoading }) {
         </h3>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-              <ArrowUp className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-sky-200/60 text-xs uppercase tracking-wider">High Tide</p>
-              <p className="text-white text-xl font-light">{tides.nextHigh?.time || '--:--'}</p>
-            </div>
-          </div>
-          <p className="text-sky-100/50 text-sm">{tides.nextHigh?.height || ''}</p>
-        </div>
-
-        <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-sky-500/20 flex items-center justify-center">
-              <ArrowDown className="w-5 h-5 text-sky-400" />
-            </div>
-            <div>
-              <p className="text-sky-200/60 text-xs uppercase tracking-wider">Low Tide</p>
-              <p className="text-white text-xl font-light">{tides.nextLow?.time || '--:--'}</p>
-            </div>
-          </div>
-          <p className="text-sky-100/50 text-sm">{tides.nextLow?.height || ''}</p>
-        </div>
-
+      <div className="space-y-3">
         {tides.tideStatus && (
-          <div className="p-3 bg-white/5 rounded-xl text-center">
+          <div className="p-3 bg-white/5 rounded-xl text-center mb-4">
             <span className="text-sky-200/60 text-xs uppercase tracking-wider">Tide Now: </span>
             <span className="text-white font-medium">{tides.tideStatus}</span>
           </div>
         )}
+
+        <p className="text-sky-200/60 text-xs uppercase tracking-wider">High Tides</p>
+        {tides.highTides && tides.highTides.map((tide, idx) => (
+          <div key={idx} className="flex items-center justify-between p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+            <div className="flex items-center gap-2">
+              <ArrowUp className="w-4 h-4 text-emerald-400" />
+              <span className="text-white text-sm font-light">{tide.time}</span>
+            </div>
+            <span className="text-emerald-300 text-sm">{tide.height}</span>
+          </div>
+        ))}
+
+        <p className="text-sky-200/60 text-xs uppercase tracking-wider mt-4">Low Tides</p>
+        {tides.lowTides && tides.lowTides.map((tide, idx) => (
+          <div key={idx} className="flex items-center justify-between p-3 bg-sky-500/10 rounded-xl border border-sky-500/20">
+            <div className="flex items-center gap-2">
+              <ArrowDown className="w-4 h-4 text-sky-400" />
+              <span className="text-white text-sm font-light">{tide.time}</span>
+            </div>
+            <span className="text-sky-300 text-sm">{tide.height}</span>
+          </div>
+        ))}
       </div>
 
       <CardFooter
