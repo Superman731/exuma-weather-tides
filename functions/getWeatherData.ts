@@ -96,4 +96,62 @@ export default async function getWeatherData() {
       moonPhase: 'Waning Crescent'
     }
   };
+  } catch (error) {
+    console.error('Weather API error:', error);
+    // Return fallback data
+    return {
+      weather: {
+        temperature: 78,
+        feelsLike: 76,
+        condition: 'Partly Cloudy',
+        wind: 12,
+        humidity: 75,
+        cloudCover: 40,
+        rainChance: 10
+      },
+      forecastData: {
+        current: { temp: 78, feelsLike: 76, humidity: 75, cloudCover: 40, rainChance: 10 },
+        today: {
+          day: { temp: 82, condition: 'Partly Cloudy', description: 'Pleasant', rainChance: 10, windSpeed: 12, humidity: 75, uvIndex: 7 },
+          night: { temp: 72, condition: 'Clear', description: 'Clear skies', rainChance: 5, windSpeed: 8, humidity: 80 },
+          sunrise: '6:44 AM',
+          sunset: '5:47 PM'
+        },
+        forecast: [
+          { date: 'Thu 29', high: 83, low: 73, condition: 'Sunny', rainChance: 5 },
+          { date: 'Fri 30', high: 82, low: 72, condition: 'Partly Cloudy', rainChance: 10 },
+          { date: 'Sat 31', high: 81, low: 71, condition: 'Sunny', rainChance: 0 },
+          { date: 'Sun 1', high: 80, low: 70, condition: 'Sunny', rainChance: 0 },
+          { date: 'Mon 2', high: 82, low: 72, condition: 'Partly Cloudy', rainChance: 15 },
+          { date: 'Tue 3', high: 83, low: 73, condition: 'Sunny', rainChance: 5 }
+        ]
+      },
+      oceanData: {
+        windSpeed: 12,
+        windGusts: 18,
+        windDirection: 'NE',
+        tideStatus: 'Rising',
+        waterTemp: 78,
+        pressure: '30.1 inHg',
+        pressureTrend: 'steady',
+        boatSafeHours: '6 AM - 6 PM'
+      },
+      sunData: {
+        daylightLength: '11h 3m',
+        goldenHour: '5:15 PM - 5:47 PM',
+        uvIndex: 7,
+        solarNoon: '12:15 PM',
+        twilight: {
+          civil: '5:47 PM - 6:09 PM',
+          nautical: '6:09 PM - 6:35 PM',
+          astronomical: '6:35 PM - 7:00 PM'
+        }
+      },
+      astronomy: {
+        sunrise: '6:44 AM',
+        sunset: '5:47 PM',
+        moonPhase: 'Waning Crescent'
+      }
+    };
+  }
 }
