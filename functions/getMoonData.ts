@@ -1,6 +1,6 @@
 export default async function getMoonData() {
-  const latitude = 23.4334;
-  const longitude = -75.6932;
+  const latitude = 23.439714577294154;
+  const longitude = -75.60141194341342;
   const retrievedAt = new Date().toISOString();
   
   // Calculate moon phase using astronomical algorithms (accurate)

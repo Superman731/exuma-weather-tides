@@ -1,14 +1,36 @@
-export default async function getTideData({ base44 }) {
-  const latitude = 23.4334;
-  const longitude = -75.6932;
+import { httpGetJson } from './_httpHelper.js';
+
+export default async function getTideData() {
+  const latitude = 23.439714577294154;
+  const longitude = -75.60141194341342;
   const retrievedAt = new Date().toISOString();
   
+  // Check for API key
+  const apiKey = process.env.TIDE_API_KEY || 'f8e0ea4a-d7f5-48fc-9baa-1c9d8dcf232d';
+  
+  if (!apiKey || apiKey === 'YOUR_KEY_HERE') {
+    return {
+      ok: false,
+      source: "WorldTides",
+      retrievedAt,
+      lat: latitude,
+      lon: longitude,
+      units: {},
+      data: null,
+      error: {
+        status: 401,
+        message: "Missing TIDE_API_KEY",
+        details: "WorldTides API requires a valid API key. Set TIDE_API_KEY environment variable."
+      }
+    };
+  }
+  
   try {
-    const url = `https://www.worldtides.info/api/v3?heights&extremes&lat=${latitude}&lon=${longitude}&key=f8e0ea4a-d7f5-48fc-9baa-1c9d8dcf232d`;
+    const url = `https://www.worldtides.info/api/v3?heights&extremes&lat=${latitude}&lon=${longitude}&key=${apiKey}`;
     
-    const response = await base44.asServiceRole.fetch(url);
+    const result = await httpGetJson(url, "WorldTides");
     
-    if (!response.ok) {
+    if (!result.ok) {
       return {
         ok: false,
         source: "WorldTides",
@@ -18,14 +40,18 @@ export default async function getTideData({ base44 }) {
         units: {},
         data: null,
         error: {
-          status: response.status,
-          message: "WorldTides API request failed",
-          details: `HTTP ${response.status}: ${response.statusText}`
+          status: result.status || 500,
+          message: result.error?.message || "WorldTides fetch failed",
+          details: JSON.stringify({
+            error: result.error,
+            text: result.text?.substring(0, 300),
+            fetchSource: result.fetchSource
+          })
         }
       };
     }
     
-    const apiData = await response.json();
+    const apiData = result.json;
     
     if (apiData.error) {
       return {
@@ -124,7 +150,7 @@ export default async function getTideData({ base44 }) {
       error: null
     };
     
-  } catch (error) {
+  } catch (err) {
     return {
       ok: false,
       source: "WorldTides",
@@ -135,8 +161,8 @@ export default async function getTideData({ base44 }) {
       data: null,
       error: {
         status: 500,
-        message: "Network error or timeout",
-        details: error.message
+        message: err.message || "Exception in getTideData",
+        details: err.stack || JSON.stringify(err)
       }
     };
   }

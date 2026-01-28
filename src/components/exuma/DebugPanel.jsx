@@ -62,7 +62,14 @@ export default function DebugPanel({ apiCalls = [] }) {
               {call.error && (
                 <div className="mt-2 p-2 bg-red-900/30 rounded text-red-200">
                   <div className="font-semibold">Error: {call.error.message}</div>
-                  <div className="text-xs mt-1">{call.error.details}</div>
+                  {call.error.details && (
+                    <div className="text-xs mt-1 max-h-32 overflow-y-auto">
+                      <pre className="whitespace-pre-wrap break-words">{call.error.details}</pre>
+                    </div>
+                  )}
+                  {call.error.status && (
+                    <div className="text-xs mt-1">Status: {call.error.status}</div>
+                  )}
                 </div>
               )}
               

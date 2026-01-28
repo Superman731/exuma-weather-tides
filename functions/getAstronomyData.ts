@@ -1,15 +1,17 @@
-export default async function getAstronomyData({ base44 }) {
-  const latitude = 23.4334;
-  const longitude = -75.6932;
+import { httpGetJson } from './_httpHelper.js';
+
+export default async function getAstronomyData() {
+  const latitude = 23.439714577294154;
+  const longitude = -75.60141194341342;
   const retrievedAt = new Date().toISOString();
   const today = new Date().toISOString().split('T')[0];
   
   try {
     const url = `https://api.sunrise-sunset.org/json?lat=${latitude}&lng=${longitude}&date=${today}&formatted=0`;
     
-    const response = await base44.asServiceRole.fetch(url);
+    const result = await httpGetJson(url, "sunrise-sunset.org");
     
-    if (!response.ok) {
+    if (!result.ok) {
       return {
         ok: false,
         source: "sunrise-sunset.org",
@@ -19,14 +21,18 @@ export default async function getAstronomyData({ base44 }) {
         units: {},
         data: null,
         error: {
-          status: response.status,
-          message: "Sunrise-sunset API request failed",
-          details: `HTTP ${response.status}: ${response.statusText}`
+          status: result.status || 500,
+          message: result.error?.message || "Sunrise-sunset fetch failed",
+          details: JSON.stringify({
+            error: result.error,
+            text: result.text?.substring(0, 300),
+            fetchSource: result.fetchSource
+          })
         }
       };
     }
     
-    const apiData = await response.json();
+    const apiData = result.json;
     
     if (apiData.status !== 'OK') {
       return {
@@ -90,7 +96,7 @@ export default async function getAstronomyData({ base44 }) {
       error: null
     };
     
-  } catch (error) {
+  } catch (err) {
     return {
       ok: false,
       source: "sunrise-sunset.org",
@@ -101,8 +107,8 @@ export default async function getAstronomyData({ base44 }) {
       data: null,
       error: {
         status: 500,
-        message: "Network error or timeout",
-        details: error.message
+        message: err.message || "Exception in getAstronomyData",
+        details: err.stack || JSON.stringify(err)
       }
     };
   }

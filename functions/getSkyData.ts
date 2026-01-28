@@ -1,6 +1,6 @@
 export default async function getSkyData() {
-  const latitude = 23.4334;
-  const longitude = -75.6932;
+  const latitude = 23.439714577294154;
+  const longitude = -75.60141194341342;
   const retrievedAt = new Date().toISOString();
   
   try {
@@ -78,7 +78,7 @@ export default async function getSkyData() {
       error: null
     };
     
-  } catch (error) {
+  } catch (err) {
     return {
       ok: false,
       source: "Astronomical Calculation",
@@ -89,8 +89,8 @@ export default async function getSkyData() {
       data: null,
       error: {
         status: 500,
-        message: "Sky data calculation error",
-        details: error.message
+        message: err.message || "Exception in getSkyData",
+        details: err.stack || JSON.stringify(err)
       }
     };
   }

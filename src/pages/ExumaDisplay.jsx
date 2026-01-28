@@ -29,6 +29,68 @@ export default function ExumaDisplay() {
     const calls = [];
     
     try {
+      // Healthcheck first
+      const healthStart = Date.now();
+      const healthStartTime = new Date().toISOString();
+      try {
+        const healthData = await base44.functions.invoke('getHealthcheck', {});
+        const healthEnd = Date.now();
+        calls.push({
+          functionName: 'getHealthcheck',
+          startTime: healthStartTime,
+          endTime: new Date().toISOString(),
+          duration: healthEnd - healthStart,
+          ok: healthData.ok,
+          source: healthData.source,
+          lat: healthData.lat,
+          lon: healthData.lon,
+          error: healthData.error,
+          responsePreview: JSON.stringify(healthData).substring(0, 300)
+        });
+      } catch (error) {
+        calls.push({
+          functionName: 'getHealthcheck',
+          startTime: healthStartTime,
+          endTime: new Date().toISOString(),
+          duration: Date.now() - healthStart,
+          ok: false,
+          source: 'Error',
+          error: { message: 'Exception', details: error.message },
+          responsePreview: ''
+        });
+      }
+
+      // Test External Fetch
+      const testStart = Date.now();
+      const testStartTime = new Date().toISOString();
+      try {
+        const testData = await base44.functions.invoke('testExternalFetch', {});
+        const testEnd = Date.now();
+        calls.push({
+          functionName: 'testExternalFetch',
+          startTime: testStartTime,
+          endTime: new Date().toISOString(),
+          duration: testEnd - testStart,
+          ok: testData.ok,
+          source: testData.source,
+          lat: testData.lat,
+          lon: testData.lon,
+          error: testData.error,
+          responsePreview: JSON.stringify(testData).substring(0, 300)
+        });
+      } catch (error) {
+        calls.push({
+          functionName: 'testExternalFetch',
+          startTime: testStartTime,
+          endTime: new Date().toISOString(),
+          duration: Date.now() - testStart,
+          ok: false,
+          source: 'Error',
+          error: { message: 'Exception', details: error.message },
+          responsePreview: ''
+        });
+      }
+
       // Weather
       const weatherStart = Date.now();
       const weatherStartTime = new Date().toISOString();

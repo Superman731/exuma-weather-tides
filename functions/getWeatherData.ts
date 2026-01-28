@@ -1,14 +1,16 @@
-export default async function getWeatherData({ base44 }) {
-  const latitude = 23.4334;
-  const longitude = -75.6932;
+import { httpGetJson } from './_httpHelper.js';
+
+export default async function getWeatherData() {
+  const latitude = 23.439714577294154;
+  const longitude = -75.60141194341342;
   const retrievedAt = new Date().toISOString();
   
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&timezone=America/Nassau&forecast_days=7&temperature_unit=fahrenheit&wind_speed_unit=mph`;
     
-    const response = await base44.asServiceRole.fetch(url);
+    const result = await httpGetJson(url, "Open-Meteo");
     
-    if (!response.ok) {
+    if (!result.ok) {
       return {
         ok: false,
         source: "Open-Meteo",
@@ -18,14 +20,18 @@ export default async function getWeatherData({ base44 }) {
         units: {},
         data: null,
         error: {
-          status: response.status,
-          message: "Open-Meteo API request failed",
-          details: `HTTP ${response.status}: ${response.statusText}`
+          status: result.status || 500,
+          message: result.error?.message || "Open-Meteo fetch failed",
+          details: JSON.stringify({
+            error: result.error,
+            text: result.text?.substring(0, 300),
+            fetchSource: result.fetchSource
+          })
         }
       };
     }
     
-    const data = await response.json();
+    const data = result.json;
     
     if (!data.current || !data.daily) {
       return {
@@ -108,7 +114,7 @@ export default async function getWeatherData({ base44 }) {
       error: null
     };
     
-  } catch (error) {
+  } catch (err) {
     return {
       ok: false,
       source: "Open-Meteo",
@@ -119,8 +125,8 @@ export default async function getWeatherData({ base44 }) {
       data: null,
       error: {
         status: 500,
-        message: "Network error or timeout",
-        details: error.message
+        message: err.message || "Exception in getWeatherData",
+        details: err.stack || JSON.stringify(err)
       }
     };
   }
