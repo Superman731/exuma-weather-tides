@@ -16,8 +16,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    const lat = 23.614753;
-    const lon = -75.963821;
+    const lat = 23.4397;
+    const lon = -75.5970;
 
     // Health check
     if (bodyAction === 'health') {
@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
 
     // Weather
     if (bodyAction === 'weather') {
-      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FNassau&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=7`;
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl,uv_index,sunshine_duration&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max,sunshine_duration&timezone=America%2FNassau&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=7`;
 
       // Get water temperature from Open-Meteo Marine API
       const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_direction,wave_period,ocean_current_velocity,ocean_current_direction&hourly=sea_surface_temperature&timezone=America%2FNassau&temperature_unit=fahrenheit`;
@@ -59,7 +59,9 @@ Deno.serve(async (req) => {
         condition: weatherCodes[data.daily.weather_code[i]] || 'Unknown',
         high: data.daily.temperature_2m_max[i],
         low: data.daily.temperature_2m_min[i],
-        rainChance: data.daily.precipitation_probability_max[i] || 0
+        rainChance: data.daily.precipitation_probability_max[i] || 0,
+        uvIndex: data.daily.uv_index_max[i] || null,
+        sunshineDuration: data.daily.sunshine_duration[i] || null
       })) || [];
 
       return Response.json({
@@ -78,6 +80,8 @@ Deno.serve(async (req) => {
             windDirection: data.current?.wind_direction_10m,
             windGusts: Math.round(data.current?.wind_gusts_10m || 0),
             pressure: Math.round(data.current?.pressure_msl || 0),
+            uvIndex: data.current?.uv_index || null,
+            sunshineHours: data.current?.sunshine_duration ? (data.current.sunshine_duration / 3600).toFixed(1) : null,
             waterTemp: marineData.hourly?.sea_surface_temperature?.[0] ? Math.round(marineData.hourly.sea_surface_temperature[0]) : null,
             waveHeight: marineData.current?.wave_height ? (marineData.current.wave_height * 3.28084).toFixed(1) : null,
             wavePeriod: marineData.current?.wave_period || null
@@ -85,7 +89,9 @@ Deno.serve(async (req) => {
           today: {
             tempHigh: dailyData[0]?.high || 0,
             tempLow: dailyData[0]?.low || 0,
-            condition: dailyData[0]?.condition || 'Unknown'
+            condition: dailyData[0]?.condition || 'Unknown',
+            uvIndex: dailyData[0]?.uvIndex || null,
+            sunshineDuration: dailyData[0]?.sunshineDuration ? (dailyData[0].sunshineDuration / 3600).toFixed(1) : null
           },
           forecast: dailyData.slice(1, 7)
         }
