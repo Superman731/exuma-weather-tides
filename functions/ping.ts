@@ -92,9 +92,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Tides - Using NOAA free API (Settlement Point, Grand Bahama - closest station)
+    // Tides - Using NOAA free API for Exuma (Tropic of Cancer Beach)
     if (bodyAction === 'tides') {
-      const stationId = '8670870'; // NOAA station: Settlement Point, Grand Bahama
+      const stationId = '8727520'; // NOAA station: Exuma Cays, Bahamas (closer to Tropic of Cancer)
       const today = new Date();
       const beginDate = today.toISOString().split('T')[0].replace(/-/g, '');
       const endDate = new Date(today.getTime() + 86400000).toISOString().split('T')[0].replace(/-/g, '');
@@ -114,15 +114,24 @@ Deno.serve(async (req) => {
       const now = Date.now();
       const predictions = data.predictions || [];
 
-      const highTides = predictions.filter(t => t.type === 'H');
-      const lowTides = predictions.filter(t => t.type === 'L');
+      const highTides = predictions.filter(t => t.type === 'H').map(t => ({
+        time: new Date(t.t).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        height: `${parseFloat(t.v).toFixed(1)} ft`,
+        timestamp: new Date(t.t).getTime()
+      }));
 
-      const nextHigh = highTides.find(t => new Date(t.t).getTime() > now) || highTides[0];
-      const nextLow = lowTides.find(t => new Date(t.t).getTime() > now) || lowTides[0];
+      const lowTides = predictions.filter(t => t.type === 'L').map(t => ({
+        time: new Date(t.t).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        height: `${parseFloat(t.v).toFixed(1)} ft`,
+        timestamp: new Date(t.t).getTime()
+      }));
+
+      const nextHigh = highTides.find(t => t.timestamp > now);
+      const nextLow = lowTides.find(t => t.timestamp > now);
 
       let tideStatus = 'Unknown';
       if (nextHigh && nextLow) {
-        tideStatus = new Date(nextHigh.t).getTime() < new Date(nextLow.t).getTime() ? 'Rising' : 'Falling';
+        tideStatus = nextHigh.timestamp < nextLow.timestamp ? 'Rising' : 'Falling';
       }
 
       return Response.json({
@@ -131,18 +140,10 @@ Deno.serve(async (req) => {
         retrievedAt: new Date().toISOString(),
         lat, lon,
         data: {
-          nextHigh: nextHigh ? {
-            time: new Date(nextHigh.t).toLocaleTimeString('en-US', { 
-              hour: 'numeric', minute: '2-digit'
-            }),
-            height: `${parseFloat(nextHigh.v).toFixed(1)} ft`
-          } : null,
-          nextLow: nextLow ? {
-            time: new Date(nextLow.t).toLocaleTimeString('en-US', { 
-              hour: 'numeric', minute: '2-digit'
-            }),
-            height: `${parseFloat(nextLow.v).toFixed(1)} ft`
-          } : null,
+          highTides: highTides.slice(0, 2),
+          lowTides: lowTides.slice(0, 2),
+          nextHigh: nextHigh || highTides[0] || null,
+          nextLow: nextLow || lowTides[0] || null,
           tideStatus
         }
       });
@@ -201,7 +202,7 @@ Deno.serve(async (req) => {
       const year = now.getFullYear();
       const month = now.getMonth() + 1;
       const day = now.getDate();
-      
+
       const jd = 367 * year - Math.floor(7 * (year + Math.floor((month + 9) / 12)) / 4) + 
                  Math.floor(275 * month / 9) + day + 1721013.5;
       const daysSinceNew = (jd - 2451550.1) % 29.53058867;
@@ -236,12 +237,28 @@ Deno.serve(async (req) => {
         note = 'Darkening skies - stars emerging';
       }
 
+      // Get moonrise/moonset from astronomy API
+      const astroUrl = `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lon}&formatted=0`;
+      const astroResponse = await fetch(astroUrl);
+      const astroData = await astroResponse.json();
+
+      const formatTime = (utcTime) => {
+        return new Date(utcTime).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          timeZone: 'America/Nassau'
+        });
+      };
+
+      const moonrise = astroData.results?.moon_phase?.moonrise ? formatTime(astroData.results.moon_phase.moonrise) : null;
+      const moonset = astroData.results?.moon_phase?.moonset ? formatTime(astroData.results.moon_phase.moonset) : null;
+
       return Response.json({
         ok: true,
-        source: 'Calculated',
+        source: 'Calculated + sunrise-sunset.org',
         retrievedAt: new Date().toISOString(),
         lat, lon,
-        data: { phase, illumination, note }
+        data: { phase, illumination, note, moonrise, moonset }
       });
     }
 
