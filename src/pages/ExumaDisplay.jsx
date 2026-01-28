@@ -187,9 +187,24 @@ Be thorough and accurate. Use real data from authoritative sources.`,
         }
       });
 
+      // Flatten nested structures if they exist
+      const flattenedOceanData = result.oceanData ? {
+        ...result.oceanData,
+        windSpeed: result.oceanData.windSpeed || result.oceanData.wind?.speed,
+        windGusts: result.oceanData.windGusts || result.oceanData.wind?.gusts,
+        windDirection: result.oceanData.windDirection || result.oceanData.wind?.direction
+      } : null;
+
+      const flattenedTides = result.tides ? {
+        highTide: result.tides.highTide?.time || result.tides.highTide,
+        highTideHeight: result.tides.highTide?.height || result.tides.highTideHeight,
+        lowTide: result.tides.lowTide?.time || result.tides.lowTide,
+        lowTideHeight: result.tides.lowTide?.height || result.tides.lowTideHeight
+      } : null;
+
       setWeather(result.weather);
-      setOceanData(result.oceanData);
-      setTides(result.tides);
+      setOceanData(flattenedOceanData);
+      setTides(flattenedTides);
       setSunData(result.sunData);
       setAstronomy(result.astronomy);
       setMoonData(result.moonData);
