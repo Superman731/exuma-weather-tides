@@ -33,8 +33,6 @@ export default function ExumaDisplay() {
     const calls = [];
     
     try {
-      // Removed healthcheck and testExternalFetch - not needed for display
-
       // Weather
       const weatherStart = Date.now();
       const weatherStartTime = new Date().toISOString();
@@ -146,6 +144,13 @@ export default function ExumaDisplay() {
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching data:', error);
+      // Set error responses for all cards so they show gracefully
+      if (!weatherResponse) setWeatherResponse({ ok: false, error: { message: error.message } });
+      if (!tideResponse) setTideResponse({ ok: false, error: { message: error.message } });
+      if (!astronomyResponse) setAstronomyResponse({ ok: false, error: { message: error.message } });
+      if (!moonResponse) setMoonResponse({ ok: false, error: { message: error.message } });
+      if (!funFactResponse) setFunFactResponse({ ok: false, error: { message: error.message } });
+      if (!skyResponse) setSkyResponse({ ok: false, error: { message: error.message } });
     } finally {
       setIsLoading(false);
       setApiCalls(calls);
