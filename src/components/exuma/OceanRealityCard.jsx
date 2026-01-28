@@ -129,7 +129,28 @@ export default function OceanRealityCard({ response, tideResponse, isLoading }) 
             <span className="text-white font-light">{current.waveHeight} ft</span>
           </div>
         )}
-      </div>
+
+        {current.waveHeight && (
+          <div className={`flex items-center justify-between p-3 rounded-xl border ${
+            parseFloat(current.waveHeight) > 4 
+              ? 'bg-red-500/10 border-red-500/30' 
+              : parseFloat(current.waveHeight) > 2
+              ? 'bg-amber-500/10 border-amber-500/30'
+              : 'bg-emerald-500/10 border-emerald-500/30'
+          }`}>
+            <span className="text-sky-200/60 text-sm">Safe to Boat</span>
+            <span className={`font-medium ${
+              parseFloat(current.waveHeight) > 4 
+                ? 'text-red-400' 
+                : parseFloat(current.waveHeight) > 2
+                ? 'text-amber-400'
+                : 'text-emerald-400'
+            }`}>
+              {parseFloat(current.waveHeight) > 4 ? 'No' : parseFloat(current.waveHeight) > 2 ? 'Caution' : 'Yes'}
+            </span>
+          </div>
+        )}
+        </div>
 
       <CardFooter
         source={response.source}

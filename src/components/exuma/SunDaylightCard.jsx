@@ -57,11 +57,6 @@ export default function SunDaylightCard({ response, isLoading }) {
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="p-4 bg-white/5 rounded-2xl">
-          <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-2">Daylight</p>
-          <p className="text-white text-2xl font-light">{sunData.daylightLength || '--'}</p>
-        </div>
-
         <div className="p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20">
           <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-2">Golden Hour</p>
           <p className="text-white text-sm font-light">{sunData.civilTwilight?.end || '--'}</p>
