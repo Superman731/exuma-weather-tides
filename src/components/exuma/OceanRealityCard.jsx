@@ -48,6 +48,13 @@ export default function OceanRealityCard({ response, tideResponse, isLoading }) 
     return 'text-gray-400';
   };
 
+  const getWindDirection = (degrees) => {
+    if (degrees === undefined || degrees === null) return '';
+    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const index = Math.round(((degrees % 360) / 45)) % 8;
+    return directions[index];
+  };
+
   return (
     <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-white/20">
       <div className="flex items-center gap-2 mb-6">
@@ -74,7 +81,7 @@ export default function OceanRealityCard({ response, tideResponse, isLoading }) 
               <span className="text-sky-200/60 text-sm">Wind</span>
             </div>
             <span className="text-white font-light">
-              {current.windSpeed} mph {current.windDirection || ''}
+              {current.windSpeed} mph {getWindDirection(current.windDirection)}
             </span>
           </div>
         )}
