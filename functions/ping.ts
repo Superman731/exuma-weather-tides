@@ -1,531 +1,305 @@
-import { httpGetJson } from './_httpHelper.ts';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
-  const url = new URL(req.url);
-  const action = url.searchParams.get('action') || 'health';
-  const lat = 23.439714577294154;
-  const lon = -75.60141194341342;
-  const retrievedAt = new Date().toISOString();
-
   try {
-    switch (action) {
-      case 'health':
-        return new Response(JSON.stringify({
-          ok: true,
-          message: "pong",
-          timestamp: retrievedAt
-        }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
+    const url = new URL(req.url);
+    const action = url.searchParams.get('action');
 
-      case 'weather': {
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&timezone=America/Nassau&forecast_days=7&temperature_unit=fahrenheit&wind_speed_unit=mph`;
-        const result = await httpGetJson(weatherUrl, "Open-Meteo");
-        
-        if (!result.ok) {
-          return new Response(JSON.stringify({
-            ok: false,
-            source: "Open-Meteo",
-            retrievedAt,
-            lat,
-            lon,
-            units: {},
-            data: null,
-            error: {
-              status: result.status || 500,
-              message: result.error?.message || "Open-Meteo fetch failed",
-              details: result.text?.substring(0, 300)
-            }
-          }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
-        
-        const data = result.json;
-        if (!data.current || !data.daily) {
-          return new Response(JSON.stringify({
-            ok: false,
-            source: "Open-Meteo",
-            retrievedAt,
-            lat,
-            lon,
-            units: {},
-            data: null,
-            error: { status: 500, message: "Incomplete data from API" }
-          }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
-        
-        const current = data.current;
-        const daily = data.daily;
-        
-        const weatherCodeMap = {
-          0: 'Clear', 1: 'Mainly Clear', 2: 'Partly Cloudy', 3: 'Overcast',
-          45: 'Foggy', 48: 'Foggy', 51: 'Light Drizzle', 53: 'Drizzle', 55: 'Heavy Drizzle',
-          61: 'Light Rain', 63: 'Rain', 65: 'Heavy Rain', 80: 'Rain Showers', 95: 'Thunderstorm'
-        };
-        
-        return new Response(JSON.stringify({
-          ok: true,
-          source: "Open-Meteo",
-          retrievedAt,
-          sourceTimestamp: current.time || null,
-          lat,
-          lon,
-          units: { temperature: "°F", wind: "mph", pressure: "hPa", humidity: "%" },
-          data: {
-            current: {
-              temperature: Math.round(current.temperature_2m),
-              feelsLike: Math.round(current.apparent_temperature),
-              condition: weatherCodeMap[current.weather_code] || 'Unknown',
-              windSpeed: Math.round(current.wind_speed_10m),
-              windGusts: Math.round(current.wind_gusts_10m),
-              windDirection: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(current.wind_direction_10m / 45) % 8],
-              humidity: current.relative_humidity_2m,
-              cloudCover: current.cloud_cover,
-              pressure: current.surface_pressure || null
-            },
-            today: {
-              tempHigh: Math.round(daily.temperature_2m_max[0]),
-              tempLow: Math.round(daily.temperature_2m_min[0]),
-              condition: weatherCodeMap[daily.weather_code[0]] || 'Unknown',
-              rainChance: daily.precipitation_probability_max[0] || 0,
-              windSpeedMax: Math.round(daily.wind_speed_10m_max[0]),
-              uvIndex: daily.uv_index_max[0] || null,
-              sunrise: new Date(daily.sunrise[0]).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-              sunset: new Date(daily.sunset[0]).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-            },
-            forecast: daily.time.slice(1, 8).map((date, i) => ({
-              date: new Date(date).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' }),
-              high: Math.round(daily.temperature_2m_max[i + 1]),
-              low: Math.round(daily.temperature_2m_min[i + 1]),
-              condition: weatherCodeMap[daily.weather_code[i + 1]] || 'Unknown',
-              rainChance: daily.precipitation_probability_max[i + 1] || 0,
-              windSpeedMax: Math.round(daily.wind_speed_10m_max[i + 1])
-            }))
-          },
-          error: null
-        }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
+    // Parse body for action if not in query
+    let bodyAction = action;
+    if (!bodyAction) {
+      try {
+        const body = await req.json();
+        bodyAction = body.action;
+      } catch {
+        // ignore
       }
-
-      case 'tides': {
-        const apiKey = Deno.env.get('TIDE_API_KEY') || 'f8e0ea4a-d7f5-48fc-9baa-1c9d8dcf232d';
-        
-        if (!apiKey || apiKey === 'YOUR_KEY_HERE') {
-          return new Response(JSON.stringify({
-            ok: false,
-            source: "WorldTides",
-            retrievedAt,
-            lat,
-            lon,
-            units: {},
-            data: null,
-            error: {
-              status: 401,
-              message: "Missing TIDE_API_KEY environment variable",
-              details: "Set TIDE_API_KEY in Base44 dashboard settings to enable tide data"
-            }
-          }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
-        
-        const tideUrl = `https://www.worldtides.info/api/v3?heights&extremes&lat=${lat}&lon=${lon}&key=${apiKey}`;
-        const result = await httpGetJson(tideUrl, "WorldTides");
-        
-        if (!result.ok) {
-          return new Response(JSON.stringify({
-            ok: false,
-            source: "WorldTides",
-            retrievedAt,
-            lat,
-            lon,
-            units: {},
-            data: null,
-            error: {
-              status: result.status || 500,
-              message: result.error?.message || "WorldTides fetch failed",
-              details: result.text?.substring(0, 300)
-            }
-          }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
-        
-        const apiData = result.json;
-        
-        if (apiData.error) {
-          return new Response(JSON.stringify({
-            ok: false,
-            source: "WorldTides",
-            retrievedAt,
-            lat,
-            lon,
-            units: {},
-            data: null,
-            error: {
-              status: apiData.status || 400,
-              message: "WorldTides API error",
-              details: apiData.error
-            }
-          }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
-        
-        if (!apiData.extremes || !apiData.heights) {
-          return new Response(JSON.stringify({
-            ok: false,
-            source: "WorldTides",
-            retrievedAt,
-            lat,
-            lon,
-            units: {},
-            data: null,
-            error: {
-              status: 500,
-              message: "Incomplete tide data from API"
-            }
-          }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
-        
-        const now = new Date();
-        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
-        
-        const todayExtremes = apiData.extremes.filter(e => {
-          const eDate = new Date(e.dt * 1000);
-          return eDate >= todayStart && eDate < todayEnd;
-        });
-        
-        let highTide = null, lowTide = null;
-        for (const extreme of todayExtremes) {
-          const eDate = new Date(extreme.dt * 1000);
-          const timeStr = eDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-          
-          if (extreme.type === 'High') {
-            if (!highTide || eDate > now) {
-              highTide = { time: timeStr, height: extreme.height.toFixed(1) };
-            }
-          } else if (extreme.type === 'Low') {
-            if (!lowTide || eDate > now) {
-              lowTide = { time: timeStr, height: extreme.height.toFixed(1) };
-            }
-          }
-        }
-        
-        const nextExtreme = apiData.extremes.find(e => new Date(e.dt * 1000) > now);
-        const tideStatus = nextExtreme ? (nextExtreme.type === 'High' ? 'Rising' : 'Falling') : 'Unknown';
-        
-        return new Response(JSON.stringify({
-          ok: true,
-          source: "WorldTides",
-          retrievedAt,
-          sourceTimestamp: null,
-          lat,
-          lon,
-          units: { height: "feet" },
-          data: { highTide, lowTide, tideStatus },
-          error: null
-        }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-
-      case 'astronomy': {
-        const today = new Date().toISOString().split('T')[0];
-        const astroUrl = `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lon}&date=${today}&formatted=0`;
-        
-        const result = await httpGetJson(astroUrl, "sunrise-sunset.org");
-        
-        if (!result.ok) {
-          return new Response(JSON.stringify({
-            ok: false,
-            source: "sunrise-sunset.org",
-            retrievedAt,
-            lat,
-            lon,
-            units: {},
-            data: null,
-            error: {
-              status: result.status || 500,
-              message: result.error?.message || "Sunrise-sunset fetch failed",
-              details: result.text?.substring(0, 300)
-            }
-          }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
-        
-        const apiData = result.json;
-        
-        if (!apiData.results) {
-          return new Response(JSON.stringify({
-            ok: false,
-            source: "sunrise-sunset.org",
-            retrievedAt,
-            lat,
-            lon,
-            units: {},
-            data: null,
-            error: {
-              status: 500,
-              message: "Invalid API response - missing results"
-            }
-          }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
-        
-        const results = apiData.results;
-        
-        const formatTime = (utcString) => {
-          const date = new Date(utcString);
-          return date.toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
-            minute: '2-digit', 
-            hour12: true,
-            timeZone: 'America/Nassau'
-          });
-        };
-        
-        const dayLengthSeconds = results.day_length;
-        const dayLengthHours = Math.floor(dayLengthSeconds / 3600);
-        const dayLengthMinutes = Math.floor((dayLengthSeconds % 3600) / 60);
-        
-        return new Response(JSON.stringify({
-          ok: true,
-          source: "sunrise-sunset.org",
-          retrievedAt,
-          sourceTimestamp: null,
-          lat,
-          lon,
-          units: {},
-          data: {
-            sunrise: formatTime(results.sunrise),
-            sunset: formatTime(results.sunset),
-            solarNoon: formatTime(results.solar_noon),
-            dayLength: `${dayLengthHours}h ${dayLengthMinutes}m`,
-            civilTwilightEnd: formatTime(results.civil_twilight_end),
-            nauticalTwilightEnd: formatTime(results.nautical_twilight_end),
-            astronomicalTwilightEnd: formatTime(results.astronomical_twilight_end),
-            goldenHour: formatTime(results.sunset)
-          },
-          error: null
-        }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-
-      case 'moon': {
-        const now = new Date();
-        const julianDay = (now.getTime() / 86400000) + 2440587.5;
-        const daysSinceNewMoon = julianDay - 2451549.5;
-        const newMoons = daysSinceNewMoon / 29.53058867;
-        const phase = (newMoons % 1) * 29.53058867;
-        
-        let phaseName, illumination;
-        if (phase < 1.84566) {
-          phaseName = "New Moon";
-          illumination = 0;
-        } else if (phase < 5.53699) {
-          phaseName = "Waxing Crescent";
-          illumination = Math.round((phase / 29.53058867) * 100);
-        } else if (phase < 9.22831) {
-          phaseName = "First Quarter";
-          illumination = 50;
-        } else if (phase < 12.91963) {
-          phaseName = "Waxing Gibbous";
-          illumination = Math.round((phase / 29.53058867) * 100);
-        } else if (phase < 16.61096) {
-          phaseName = "Full Moon";
-          illumination = 100;
-        } else if (phase < 20.30228) {
-          phaseName = "Waning Gibbous";
-          illumination = Math.round((1 - ((phase - 14.765) / 29.53058867)) * 100);
-        } else if (phase < 23.99361) {
-          phaseName = "Last Quarter";
-          illumination = 50;
-        } else {
-          phaseName = "Waning Crescent";
-          illumination = Math.round((1 - ((phase - 14.765) / 29.53058867)) * 100);
-        }
-        
-        let note = null;
-        if (phaseName === "Full Moon") {
-          note = "Bright moon tonight - best for night activities";
-        } else if (phaseName === "New Moon") {
-          note = "Dark skies tonight - perfect for stargazing";
-        }
-        
-        return new Response(JSON.stringify({
-          ok: true,
-          source: "Astronomical Calculation",
-          retrievedAt,
-          sourceTimestamp: now.toISOString(),
-          lat,
-          lon,
-          units: {},
-          data: {
-            phase: phaseName,
-            illumination,
-            note
-          },
-          error: null
-        }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-
-      case 'sky': {
-        const now = new Date();
-        const month = now.getMonth();
-        
-        const constellations = {
-          0: "Orion, Taurus", 1: "Orion, Gemini", 2: "Leo, Cancer", 3: "Leo, Virgo",
-          4: "Virgo, Boötes", 5: "Scorpius, Libra", 6: "Sagittarius, Scorpius", 7: "Sagittarius, Aquila",
-          8: "Pegasus, Aquarius", 9: "Pegasus, Andromeda", 10: "Andromeda, Cassiopeia", 11: "Orion, Taurus"
-        };
-        
-        const visiblePlanets = month >= 3 && month <= 8 
-          ? "Mars, Jupiter, Saturn" 
-          : "Venus (evening), Jupiter, Saturn";
-        
-        const julianDay = (now.getTime() / 86400000) + 2440587.5;
-        const daysSinceNewMoon = julianDay - 2451549.5;
-        const moonAge = (daysSinceNewMoon % 29.53058867);
-        const moonIllumination = Math.abs(50 - (moonAge / 29.53058867) * 100);
-        
-        const isDarkSkies = moonIllumination < 25;
-        const stargazingWindow = isDarkSkies ? "11 PM - 2 AM (good)" : "After midnight (fair)";
-        
-        const milkyWayVisible = month >= 4 && month <= 9;
-        
-        const meteorShowers = {
-          0: { name: "Quadrantids", date: "early January" },
-          3: { name: "Lyrids", date: "late April" },
-          4: { name: "Eta Aquariids", date: "early May" },
-          7: { name: "Perseids", date: "mid August" },
-          11: { name: "Geminids", date: "mid December" }
-        };
-        
-        const shower = meteorShowers[month] || null;
-        
-        return new Response(JSON.stringify({
-          ok: true,
-          source: "Astronomical Calculation",
-          retrievedAt,
-          sourceTimestamp: now.toISOString(),
-          lat,
-          lon,
-          units: {},
-          data: {
-            visiblePlanets,
-            bestStargazing: stargazingWindow,
-            constellations: constellations[month],
-            milkyWayVisible,
-            meteorShower: shower,
-            satellitePasses: "ISS visible in evening hours"
-          },
-          error: null
-        }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-
-      case 'funfact': {
-        const facts = [
-          "The Exumas consist of 365 cays and islands - one for every day of the year.",
-          "Swimming pigs live on Big Major Cay in the Exumas and swim out to greet visitors.",
-          "The Exuma Cays Land and Sea Park was the first protected marine area in the Caribbean.",
-          "Thunderball Grotto in the Exumas was featured in two James Bond films.",
-          "The water in Exuma appears in 50+ shades of blue due to varying depths and sandy bottoms.",
-          "Pirates once used the shallow waters of the Exumas as hideouts in the 1700s.",
-          "The tropic of cancer runs through the Exumas at 23.5°N latitude.",
-          "Compass Cay is home to nurse sharks that swim alongside visitors.",
-          "The Exumas' Tropic of Cancer Beach is one of the most beautiful beaches in the world.",
-          "George Town, Great Exuma is the capital and largest settlement of the Exuma district.",
-          "The annual Exuma Regatta attracts sailors from around the world each April.",
-          "Exuma's waters are so clear you can see fish from 100+ feet away.",
-          "The sandbars in the Exumas shift with tides, creating new islands daily.",
-          "Exuma Point is a favorite spot for bonefishing - considered the 'grey ghost' of fishing.",
-          "Staniel Cay is home to the famous swimming pigs at Pig Beach.",
-          "The Exuma Cays are popular filming locations for Hollywood movies.",
-          "Exuma National Park protects 176 square miles of pristine ocean and islands.",
-          "The blue holes in Exuma are underwater caves formed during the last ice age.",
-          "Local Exumians celebrate their heritage with Junkanoo festivals.",
-          "The Exuma Sound drops to depths over 6,000 feet just offshore.",
-          "Fresh conch salad is a daily staple in the Exumas, caught fresh each morning."
-        ];
-        
-        const nassauTime = new Date().toLocaleString('en-US', { timeZone: 'America/Nassau' });
-        const nassauDate = new Date(nassauTime);
-        const dayOfYear = Math.floor((nassauDate - new Date(nassauDate.getFullYear(), 0, 0)) / 86400000);
-        const hour = nassauDate.getHours();
-        const factIndex = (dayOfYear + Math.floor(hour / 4)) % facts.length;
-        
-        return new Response(JSON.stringify({
-          ok: true,
-          source: "Local Facts",
-          retrievedAt,
-          units: {},
-          data: {
-            fact: facts[factIndex],
-            rotationSchedule: "Changes every 4 hours (Nassau time)",
-            factIndex,
-            totalFacts: facts.length
-          },
-          error: null
-        }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-
-      default:
-        return new Response(JSON.stringify({
-          ok: false,
-          error: {
-            status: 400,
-            message: `Unknown action: ${action}`,
-            details: "Valid actions: health, weather, tides, astronomy, moon, sky, funfact"
-          }
-        }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
     }
-  } catch (err) {
-    return new Response(JSON.stringify({
+
+    const lat = 23.614753;
+    const lon = -75.963821;
+
+    // Health check
+    if (bodyAction === 'health') {
+      return Response.json({
+        ok: true,
+        message: 'pong',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Weather
+    if (bodyAction === 'weather') {
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FNassau&forecast_days=7`;
+      
+      const response = await fetch(weatherUrl);
+      const data = await response.json();
+
+      const weatherCodes = {
+        0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+        45: 'Foggy', 48: 'Foggy', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle',
+        61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 71: 'Light snow', 73: 'Snow',
+        75: 'Heavy snow', 77: 'Snow grains', 80: 'Light showers', 81: 'Showers',
+        82: 'Heavy showers', 85: 'Light snow showers', 86: 'Snow showers',
+        95: 'Thunderstorm', 96: 'Thunderstorm with hail', 99: 'Severe thunderstorm'
+      };
+
+      return Response.json({
+        ok: true,
+        source: 'Open-Meteo API',
+        retrievedAt: new Date().toISOString(),
+        lat, lon,
+        data: {
+          current: {
+            temperature: data.current?.temperature_2m,
+            feelsLike: data.current?.apparent_temperature,
+            condition: weatherCodes[data.current?.weather_code] || 'Unknown',
+            weatherCode: data.current?.weather_code,
+            humidity: data.current?.relative_humidity_2m,
+            windSpeed: data.current?.wind_speed_10m,
+            windDirection: data.current?.wind_direction_10m,
+            windGusts: data.current?.wind_gusts_10m,
+            pressure: data.current?.pressure_msl
+          },
+          daily: data.daily?.time?.map((date, i) => ({
+            date,
+            weatherCode: data.daily.weather_code[i],
+            condition: weatherCodes[data.daily.weather_code[i]] || 'Unknown',
+            tempMax: data.daily.temperature_2m_max[i],
+            tempMin: data.daily.temperature_2m_min[i],
+            rainChance: data.daily.precipitation_probability_max[i]
+          })) || []
+        }
+      });
+    }
+
+    // Tides
+    if (bodyAction === 'tides') {
+      const WORLDTIDES_API_KEY = Deno.env.get('WORLDTIDES_API_KEY') || 'demo-key';
+      const tideUrl = `https://www.worldtides.info/api/v3?extremes&lat=${lat}&lon=${lon}&key=${WORLDTIDES_API_KEY}`;
+      
+      const response = await fetch(tideUrl);
+      const data = await response.json();
+
+      if (data.error) {
+        return Response.json({
+          ok: false,
+          error: { message: 'Tide API error', details: data.error }
+        });
+      }
+
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() / 1000;
+      const todayEnd = todayStart + 86400;
+
+      const todayTides = (data.extremes || []).filter(t => t.dt >= todayStart && t.dt < todayEnd);
+      const highTides = todayTides.filter(t => t.type === 'High');
+      const lowTides = todayTides.filter(t => t.type === 'Low');
+
+      const nextHigh = highTides.find(t => t.dt > now.getTime() / 1000) || highTides[0];
+      const nextLow = lowTides.find(t => t.dt > now.getTime() / 1000) || lowTides[0];
+
+      let tideStatus = 'Unknown';
+      if (nextHigh && nextLow) {
+        tideStatus = nextHigh.dt < nextLow.dt ? 'Rising' : 'Falling';
+      }
+
+      return Response.json({
+        ok: true,
+        source: 'WorldTides API',
+        retrievedAt: new Date().toISOString(),
+        lat, lon,
+        data: {
+          nextHigh: nextHigh ? {
+            time: new Date(nextHigh.dt * 1000).toLocaleTimeString('en-US', { 
+              hour: 'numeric', minute: '2-digit', timeZone: 'America/Nassau' 
+            }),
+            height: `${nextHigh.height.toFixed(1)} ft`
+          } : null,
+          nextLow: nextLow ? {
+            time: new Date(nextLow.dt * 1000).toLocaleTimeString('en-US', { 
+              hour: 'numeric', minute: '2-digit', timeZone: 'America/Nassau' 
+            }),
+            height: `${nextLow.height.toFixed(1)} ft`
+          } : null,
+          tideStatus
+        }
+      });
+    }
+
+    // Astronomy
+    if (bodyAction === 'astronomy') {
+      const astroUrl = `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lon}&formatted=0`;
+      const response = await fetch(astroUrl);
+      const data = await response.json();
+
+      if (data.status !== 'OK') {
+        return Response.json({
+          ok: false,
+          error: { message: 'Astronomy API error' }
+        });
+      }
+
+      const formatTime = (utcTime) => {
+        return new Date(utcTime).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          timeZone: 'America/Nassau'
+        });
+      };
+
+      return Response.json({
+        ok: true,
+        source: 'sunrise-sunset.org',
+        retrievedAt: new Date().toISOString(),
+        lat, lon,
+        data: {
+          sunrise: formatTime(data.results.sunrise),
+          sunset: formatTime(data.results.sunset),
+          solarNoon: formatTime(data.results.solar_noon),
+          dayLength: data.results.day_length,
+          civilTwilight: {
+            begin: formatTime(data.results.civil_twilight_begin),
+            end: formatTime(data.results.civil_twilight_end)
+          },
+          nauticalTwilight: {
+            begin: formatTime(data.results.nautical_twilight_begin),
+            end: formatTime(data.results.nautical_twilight_end)
+          },
+          astronomicalTwilight: {
+            begin: formatTime(data.results.astronomical_twilight_begin),
+            end: formatTime(data.results.astronomical_twilight_end)
+          }
+        }
+      });
+    }
+
+    // Moon
+    if (bodyAction === 'moon') {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const day = now.getDate();
+      
+      const jd = 367 * year - Math.floor(7 * (year + Math.floor((month + 9) / 12)) / 4) + 
+                 Math.floor(275 * month / 9) + day + 1721013.5;
+      const daysSinceNew = (jd - 2451550.1) % 29.53058867;
+      const illumination = Math.round((1 - Math.cos(daysSinceNew * 2 * Math.PI / 29.53058867)) / 2 * 100);
+
+      let phase = 'Unknown';
+      let note = '';
+      
+      if (daysSinceNew < 1.84566) {
+        phase = 'New Moon';
+        note = 'Perfect for stargazing - dark skies tonight!';
+      } else if (daysSinceNew < 5.53699) {
+        phase = 'Waxing Crescent';
+      } else if (daysSinceNew < 9.22831) {
+        phase = 'First Quarter';
+      } else if (daysSinceNew < 12.91963) {
+        phase = 'Waxing Gibbous';
+      } else if (daysSinceNew < 16.61096) {
+        phase = 'Full Moon';
+        note = 'Bright moonlight - great for night walks!';
+      } else if (daysSinceNew < 20.30228) {
+        phase = 'Waning Gibbous';
+      } else if (daysSinceNew < 23.99361) {
+        phase = 'Last Quarter';
+      } else {
+        phase = 'Waning Crescent';
+      }
+
+      return Response.json({
+        ok: true,
+        source: 'Calculated',
+        retrievedAt: new Date().toISOString(),
+        lat, lon,
+        data: { phase, illumination, note }
+      });
+    }
+
+    // Sky
+    if (bodyAction === 'sky') {
+      const now = new Date();
+      const month = now.getMonth();
+      const hour = now.getHours();
+
+      const visiblePlanets = ['Venus', 'Mars', 'Jupiter', 'Saturn'];
+      const constellations = month < 3 || month > 10 ? 
+        ['Orion', 'Taurus', 'Gemini'] : 
+        ['Scorpius', 'Sagittarius', 'Aquila'];
+
+      const moonPhase = ((now.getDate() + month * 2.5) % 29.53);
+      const moonIllumination = Math.round((1 - Math.cos(moonPhase * 2 * Math.PI / 29.53)) / 2 * 100);
+
+      let stargazingWindow = 'Poor viewing';
+      if (moonIllumination < 30 && (hour >= 20 || hour < 5)) {
+        stargazingWindow = '8:00 PM - 5:00 AM (New moon - excellent!)';
+      } else if (hour >= 20 || hour < 5) {
+        stargazingWindow = '8:00 PM - 5:00 AM';
+      }
+
+      const meteorShowers = [
+        { name: 'Quadrantids', months: [0] },
+        { name: 'Lyrids', months: [3] },
+        { name: 'Perseids', months: [7] },
+        { name: 'Geminids', months: [11] }
+      ];
+      const activeShower = meteorShowers.find(s => s.months.includes(month));
+
+      return Response.json({
+        ok: true,
+        source: 'Calculated',
+        retrievedAt: new Date().toISOString(),
+        lat, lon,
+        data: {
+          visiblePlanets,
+          constellations,
+          stargazingWindow,
+          meteorShower: activeShower?.name || 'None currently active',
+          milkyWayVisible: moonIllumination < 40 && (hour >= 21 || hour < 4)
+        }
+      });
+    }
+
+    // Fun Fact
+    if (bodyAction === 'funfact') {
+      const facts = [
+        "The Exumas consist of 365 cays and islands, one for each day of the year!",
+        "The waters around Exuma are home to the famous swimming pigs at Pig Beach.",
+        "Exuma Cays Land and Sea Park was the first protected area in the Caribbean.",
+        "Thunderball Grotto, featured in James Bond films, is a popular snorkeling spot.",
+        "The Exumas have some of the clearest water in the world with visibility up to 200 feet."
+      ];
+
+      const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+      const factIndex = dayOfYear % facts.length;
+
+      return Response.json({
+        ok: true,
+        source: 'Local Database',
+        retrievedAt: new Date().toISOString(),
+        data: {
+          fact: facts[factIndex],
+          factIndex,
+          totalFacts: facts.length,
+          rotationSchedule: 'Changes daily'
+        }
+      });
+    }
+
+    return Response.json({
+      ok: false,
+      error: { message: 'Unknown action', details: `Action: ${bodyAction}` }
+    });
+
+  } catch (error) {
+    return Response.json({
       ok: false,
       error: {
-        status: 500,
-        message: err.message || "Exception in ping router",
-        details: err.stack
-      },
-      retrievedAt
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+        message: 'Server error',
+        details: error.message
+      }
+    }, { status: 500 });
   }
 });
