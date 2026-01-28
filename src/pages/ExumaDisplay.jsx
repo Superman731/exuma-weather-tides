@@ -6,7 +6,7 @@ import TideCard from '@/components/exuma/TideCard';
 import AstronomyCard from '@/components/exuma/AstronomyCard';
 import FunFactCard from '@/components/exuma/FunFactCard';
 import OceanRealityCard from '@/components/exuma/OceanRealityCard';
-import SunDaylightCard from '@/components/exuma/SunDaylightCard';
+
 import MoonCard from '@/components/exuma/MoonCard';
 import SystemStatusCard from '@/components/exuma/SystemStatusCard';
 import SkySpaceCard from '@/components/exuma/SkySpaceCard';
@@ -126,23 +126,18 @@ export default function ExumaDisplay() {
               response={astronomyResponse} 
               isLoading={isLoading} 
             />
-            
-            <div className="lg:col-span-2">
-              <SunDaylightCard 
-                response={astronomyResponse} 
-                isLoading={isLoading} 
-              />
-            </div>
 
             <MoonCard 
               response={moonResponse} 
               isLoading={isLoading} 
             />
             
-            <SkySpaceCard 
-              response={skyResponse} 
-              isLoading={isLoading} 
-            />
+            <div className="lg:col-span-2">
+              <SkySpaceCard 
+                response={skyResponse} 
+                isLoading={isLoading} 
+              />
+            </div>
             
             <div className="md:col-span-2 lg:col-span-2">
               <FunFactCard 

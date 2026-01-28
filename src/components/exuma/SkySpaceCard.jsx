@@ -51,7 +51,7 @@ export default function SkySpaceCard({ response, isLoading }) {
       <div className="space-y-4">
         {skyData?.visiblePlanets && skyData.visiblePlanets.length > 0 && (
           <div className="p-3 bg-white/5 rounded-xl">
-            <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-2">Visible Tonight</p>
+            <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-2">Visible Planets</p>
             <p className="text-white font-light">{skyData.visiblePlanets.join(', ')}</p>
           </div>
         )}
@@ -64,8 +64,8 @@ export default function SkySpaceCard({ response, isLoading }) {
         )}
 
         <div className="p-4 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-2xl border border-purple-500/20">
-          <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-3">Night Sky Visibility</p>
-          <div className="space-y-2">
+          <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-3">Night Sky Conditions</p>
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sky-200/70 text-sm">Milky Way</span>
               <span className={`text-sm font-medium ${
@@ -83,6 +83,14 @@ export default function SkySpaceCard({ response, isLoading }) {
               }`}>
                 {skyData?.skyQuality || 'Moderate'}
               </span>
+            </div>
+            <div className="flex items-center justify-between pt-2 border-t border-white/10">
+              <span className="text-sky-200/70 text-xs">Cloud Cover</span>
+              <span className="text-white text-xs font-light">{skyData?.cloudCover || '--'}%</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sky-200/70 text-xs">Humidity</span>
+              <span className="text-white text-xs font-light">{skyData?.humidity || '--'}%</span>
             </div>
           </div>
         </div>
