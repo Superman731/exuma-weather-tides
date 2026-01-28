@@ -1,50 +1,12 @@
 /**
- * Runtime function path resolver for Base44 backend functions
- * Discovers the correct base path by testing ping endpoint
+ * Base44 backend function caller
+ * Base path confirmed: /function
  */
 
-let cachedBasePath = null;
-let discoveryPromise = null;
-
-async function discoverBasePath() {
-  const candidatePaths = ['/function', '/functions', '/api/functions'];
-  
-  for (const basePath of candidatePaths) {
-    try {
-      const response = await fetch(`${basePath}/ping`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (response.ok) {
-        console.log(`✓ Discovered working function base path: ${basePath}`);
-        return basePath;
-      }
-    } catch (error) {
-      // Continue to next candidate
-    }
-  }
-  
-  throw new Error('Could not discover working function base path');
-}
-
-async function getBasePath() {
-  if (cachedBasePath) {
-    return cachedBasePath;
-  }
-  
-  if (!discoveryPromise) {
-    discoveryPromise = discoverBasePath();
-  }
-  
-  cachedBasePath = await discoveryPromise;
-  return cachedBasePath;
-}
+const BASE_PATH = '/function';
 
 export async function callFunction(functionName, payload = {}) {
-  const basePath = await getBasePath();
-  const url = `${basePath}/${functionName}`;
-  
+  const url = `${BASE_PATH}/${functionName}`;
   const startTime = Date.now();
   
   try {
@@ -61,7 +23,22 @@ export async function callFunction(functionName, payload = {}) {
     try {
       data = JSON.parse(responseText);
     } catch {
-      data = { raw: responseText };
+      // Not JSON - likely HTML error page
+      return {
+        ok: false,
+        error: {
+          message: `HTTP ${response.status} - Non-JSON response`,
+          details: responseText.substring(0, 300),
+          status: response.status,
+          url
+        },
+        _debug: {
+          url,
+          status: response.status,
+          duration,
+          responsePreview: responseText.substring(0, 300)
+        }
+      };
     }
     
     if (!response.ok) {
@@ -69,7 +46,7 @@ export async function callFunction(functionName, payload = {}) {
         ok: false,
         error: {
           message: `HTTP ${response.status}`,
-          details: responseText.substring(0, 300),
+          details: JSON.stringify(data).substring(0, 300),
           status: response.status,
           url
         },
@@ -95,7 +72,7 @@ export async function callFunction(functionName, payload = {}) {
     return {
       ok: false,
       error: {
-        message: error.message,
+        message: `Network Error: ${error.message}`,
         details: error.stack || String(error),
         url
       },

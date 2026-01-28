@@ -6,10 +6,14 @@ export default function BackendProbe() {
   const [isProbing, setIsProbing] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
 
-  const probeEndpoint = async (path, method = 'GET') => {
+  const probeEndpoint = async (path, method = 'POST') => {
     const startTime = Date.now();
     try {
-      const response = await fetch(path, { method });
+      const response = await fetch(path, { 
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: method === 'POST' ? JSON.stringify({}) : undefined
+      });
       const duration = Date.now() - startTime;
       const text = await response.text();
       
@@ -48,20 +52,19 @@ export default function BackendProbe() {
     setIsProbing(true);
     const results = [];
 
-    // Test correct backend function routes (singular /function/)
+    // Test all required backend function routes
     const testPaths = [
       '/function/ping',
-      '/function/getHealthcheck',
       '/function/getWeatherData',
       '/function/getTideData',
       '/function/getAstronomyData',
       '/function/getMoonData',
-      '/function/getFunFact',
-      '/function/getSkyData'
+      '/function/getSkyData',
+      '/function/getFunFact'
     ];
 
     for (const path of testPaths) {
-      results.push(await probeEndpoint(path, 'GET'));
+      results.push(await probeEndpoint(path, 'POST'));
     }
 
     setProbeResults(results);

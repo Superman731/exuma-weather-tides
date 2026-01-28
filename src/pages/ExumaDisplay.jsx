@@ -31,40 +31,7 @@ export default function ExumaDisplay() {
     const calls = [];
     
     try {
-      // Healthcheck first
-      const healthStart = Date.now();
-      const healthStartTime = new Date().toISOString();
-      const healthData = await callFunction('getHealthcheck');
-      calls.push({
-        functionName: 'getHealthcheck',
-        startTime: healthStartTime,
-        endTime: new Date().toISOString(),
-        duration: Date.now() - healthStart,
-        ok: healthData?.ok || false,
-        source: healthData?.source || 'unknown',
-        lat: healthData?.lat,
-        lon: healthData?.lon,
-        error: healthData?.error,
-        responsePreview: JSON.stringify(healthData).substring(0, 300),
-        rawResponse: JSON.stringify(healthData._debug)
-      });
-
-      // Test External Fetch
-      const testStart = Date.now();
-      const testStartTime = new Date().toISOString();
-      const testData = await callFunction('testExternalFetch');
-      calls.push({
-        functionName: 'testExternalFetch',
-        startTime: testStartTime,
-        endTime: new Date().toISOString(),
-        duration: Date.now() - testStart,
-        ok: testData.ok,
-        source: testData.source,
-        lat: testData.lat,
-        lon: testData.lon,
-        error: testData.error,
-        responsePreview: JSON.stringify(testData).substring(0, 300)
-      });
+      // Removed healthcheck and testExternalFetch - not needed for display
 
       // Weather
       const weatherStart = Date.now();
