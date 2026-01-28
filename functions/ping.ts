@@ -44,6 +44,15 @@ Deno.serve(async (req) => {
         95: 'Thunderstorm', 96: 'Thunderstorm with hail', 99: 'Severe thunderstorm'
       };
 
+      const dailyData = data.daily?.time?.map((date, i) => ({
+        date: new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+        weatherCode: data.daily.weather_code[i],
+        condition: weatherCodes[data.daily.weather_code[i]] || 'Unknown',
+        high: data.daily.temperature_2m_max[i],
+        low: data.daily.temperature_2m_min[i],
+        rainChance: data.daily.precipitation_probability_max[i] || 0
+      })) || [];
+
       return Response.json({
         ok: true,
         source: 'Open-Meteo API',
@@ -51,24 +60,22 @@ Deno.serve(async (req) => {
         lat, lon,
         data: {
           current: {
-            temperature: data.current?.temperature_2m,
-            feelsLike: data.current?.apparent_temperature,
+            temperature: Math.round(data.current?.temperature_2m || 0),
+            feelsLike: Math.round(data.current?.apparent_temperature || 0),
             condition: weatherCodes[data.current?.weather_code] || 'Unknown',
             weatherCode: data.current?.weather_code,
-            humidity: data.current?.relative_humidity_2m,
-            windSpeed: data.current?.wind_speed_10m,
+            humidity: data.current?.relative_humidity_2m || 0,
+            windSpeed: Math.round(data.current?.wind_speed_10m || 0),
             windDirection: data.current?.wind_direction_10m,
-            windGusts: data.current?.wind_gusts_10m,
-            pressure: data.current?.pressure_msl
+            windGusts: Math.round(data.current?.wind_gusts_10m || 0),
+            pressure: Math.round(data.current?.pressure_msl || 0)
           },
-          daily: data.daily?.time?.map((date, i) => ({
-            date,
-            weatherCode: data.daily.weather_code[i],
-            condition: weatherCodes[data.daily.weather_code[i]] || 'Unknown',
-            tempMax: data.daily.temperature_2m_max[i],
-            tempMin: data.daily.temperature_2m_min[i],
-            rainChance: data.daily.precipitation_probability_max[i]
-          })) || []
+          today: {
+            tempHigh: dailyData[0]?.high || 0,
+            tempLow: dailyData[0]?.low || 0,
+            condition: dailyData[0]?.condition || 'Unknown'
+          },
+          forecast: dailyData.slice(1, 7)
         }
       });
     }
