@@ -92,9 +92,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Tides - Using NOAA free API for Exuma (Tropic of Cancer Beach)
-    if (bodyAction === 'tides') {
-      const stationId = '8727520'; // NOAA station: Exuma Cays, Bahamas (closer to Tropic of Cancer)
+    // Tides - Using NOAA free API for Exuma (Settlement Point, Bahamas)
+      if (bodyAction === 'tides') {
+        const stationId = '9710441'; // NOAA station: Settlement Point, Bahamas
       const today = new Date();
       const beginDate = today.toISOString().split('T')[0].replace(/-/g, '');
       const endDate = new Date(today.getTime() + 86400000).toISOString().split('T')[0].replace(/-/g, '');
