@@ -69,7 +69,7 @@ export default async function getMoonData() {
       error: null
     };
     
-  } catch (error) {
+  } catch (err) {
     return {
       ok: false,
       source: "Astronomical Calculation",
@@ -80,8 +80,8 @@ export default async function getMoonData() {
       data: null,
       error: {
         status: 500,
-        message: "Moon calculation failed",
-        details: error.message
+        message: err.message || "Exception in getMoonData",
+        details: err.stack || JSON.stringify(err)
       }
     };
   }

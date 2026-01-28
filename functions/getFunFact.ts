@@ -22,6 +22,8 @@ const exumaFacts = [
 ];
 
 export default async function getFunFact() {
+  const latitude = 23.439714577294154;
+  const longitude = -75.60141194341342;
   const retrievedAt = new Date().toISOString();
   
   try {
@@ -40,8 +42,8 @@ export default async function getFunFact() {
       source: "Local Facts",
       retrievedAt,
       sourceTimestamp: null,
-      lat: 23.4334,
-      lon: -75.6932,
+      lat: latitude,
+      lon: longitude,
       units: {},
       data: {
         fact: exumaFacts[factIndex],
@@ -52,19 +54,19 @@ export default async function getFunFact() {
       error: null
     };
     
-  } catch (error) {
+  } catch (err) {
     return {
       ok: false,
       source: "Local Facts",
       retrievedAt,
-      lat: 23.4334,
-      lon: -75.6932,
+      lat: latitude,
+      lon: longitude,
       units: {},
       data: null,
       error: {
         status: 500,
-        message: "Failed to retrieve fun fact",
-        details: error.message
+        message: err.message || "Exception in getFunFact",
+        details: err.stack || JSON.stringify(err)
       }
     };
   }
