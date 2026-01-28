@@ -54,13 +54,13 @@ export default function BackendProbe() {
 
     // Test all required backend function routes
     const testPaths = [
-      '/functions/ping',
-      '/functions/weather',
-      '/functions/tides',
-      '/functions/astronomy',
-      '/functions/moon',
-      '/functions/sky',
-      '/functions/funfact'
+      '/functions/ping?action=health',
+      '/functions/ping?action=weather',
+      '/functions/ping?action=tides',
+      '/functions/ping?action=astronomy',
+      '/functions/ping?action=moon',
+      '/functions/ping?action=sky',
+      '/functions/ping?action=funfact'
     ];
 
     for (const path of testPaths) {

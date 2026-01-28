@@ -9,7 +9,7 @@ export default function StatusIndicator() {
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        const result = await callFunction('ping', {});
+        const result = await callFunction('ping?action=health', {});
         if (result.ok) {
           setStatus('connected');
           setLastCheck(new Date().toLocaleTimeString());

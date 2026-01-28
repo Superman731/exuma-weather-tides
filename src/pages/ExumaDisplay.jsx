@@ -38,7 +38,7 @@ export default function ExumaDisplay() {
       // Weather
       const weatherStart = Date.now();
       const weatherStartTime = new Date().toISOString();
-      const weatherData = await callFunction('weather');
+      const weatherData = await callFunction('ping?action=weather');
       setWeatherResponse(weatherData);
       calls.push({
         functionName: 'weather',
@@ -56,7 +56,7 @@ export default function ExumaDisplay() {
       // Tides
       const tideStart = Date.now();
       const tideStartTime = new Date().toISOString();
-      const tideData = await callFunction('tides');
+      const tideData = await callFunction('ping?action=tides');
       setTideResponse(tideData);
       calls.push({
         functionName: 'tides',
@@ -74,7 +74,7 @@ export default function ExumaDisplay() {
       // Astronomy
       const astroStart = Date.now();
       const astroStartTime = new Date().toISOString();
-      const astroData = await callFunction('astronomy');
+      const astroData = await callFunction('ping?action=astronomy');
       setAstronomyResponse(astroData);
       calls.push({
         functionName: 'astronomy',
@@ -92,7 +92,7 @@ export default function ExumaDisplay() {
       // Moon
       const moonStart = Date.now();
       const moonStartTime = new Date().toISOString();
-      const moonData = await callFunction('moon');
+      const moonData = await callFunction('ping?action=moon');
       setMoonResponse(moonData);
       calls.push({
         functionName: 'moon',
@@ -110,7 +110,7 @@ export default function ExumaDisplay() {
       // Fun Fact
       const factStart = Date.now();
       const factStartTime = new Date().toISOString();
-      const factData = await callFunction('funfact');
+      const factData = await callFunction('ping?action=funfact');
       setFunFactResponse(factData);
       calls.push({
         functionName: 'funfact',
@@ -128,7 +128,7 @@ export default function ExumaDisplay() {
       // Sky & Space
       const skyStart = Date.now();
       const skyStartTime = new Date().toISOString();
-      const skyData = await callFunction('sky');
+      const skyData = await callFunction('ping?action=sky');
       setSkyResponse(skyData);
       calls.push({
         functionName: 'sky',
