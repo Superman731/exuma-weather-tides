@@ -1,14 +1,13 @@
-export default async function getAstronomyData() {
+export default async function getAstronomyData({ base44 }) {
   const latitude = 23.4334;
   const longitude = -75.6932;
   const retrievedAt = new Date().toISOString();
   const today = new Date().toISOString().split('T')[0];
   
   try {
-    const response = await fetch(
-      `https://api.sunrise-sunset.org/json?lat=${latitude}&lng=${longitude}&date=${today}&formatted=0`,
-      { timeout: 10000 }
-    );
+    const url = `https://api.sunrise-sunset.org/json?lat=${latitude}&lng=${longitude}&date=${today}&formatted=0`;
+    
+    const response = await base44.asServiceRole.fetch(url);
     
     if (!response.ok) {
       return {

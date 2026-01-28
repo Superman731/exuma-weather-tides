@@ -10,6 +10,7 @@ import SunDaylightCard from '@/components/exuma/SunDaylightCard';
 import MoonCard from '@/components/exuma/MoonCard';
 import SystemStatusCard from '@/components/exuma/SystemStatusCard';
 import DebugPanel from '@/components/exuma/DebugPanel';
+import SkySpaceCard from '@/components/exuma/SkySpaceCard';
 
 export default function ExumaDisplay() {
   const [weatherResponse, setWeatherResponse] = useState(null);
@@ -17,6 +18,7 @@ export default function ExumaDisplay() {
   const [astronomyResponse, setAstronomyResponse] = useState(null);
   const [moonResponse, setMoonResponse] = useState(null);
   const [funFactResponse, setFunFactResponse] = useState(null);
+  const [skyResponse, setSkyResponse] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [isDark, setIsDark] = useState(false);
@@ -187,6 +189,38 @@ export default function ExumaDisplay() {
         });
       }
 
+      // Sky & Space
+      const skyStart = Date.now();
+      const skyStartTime = new Date().toISOString();
+      try {
+        const skyData = await base44.functions.invoke('getSkyData', {});
+        const skyEnd = Date.now();
+        setSkyResponse(skyData);
+        calls.push({
+          functionName: 'getSkyData',
+          startTime: skyStartTime,
+          endTime: new Date().toISOString(),
+          duration: skyEnd - skyStart,
+          ok: skyData.ok,
+          source: skyData.source,
+          lat: skyData.lat,
+          lon: skyData.lon,
+          error: skyData.error,
+          responsePreview: JSON.stringify(skyData).substring(0, 300)
+        });
+      } catch (error) {
+        calls.push({
+          functionName: 'getSkyData',
+          startTime: skyStartTime,
+          endTime: new Date().toISOString(),
+          duration: Date.now() - skyStart,
+          ok: false,
+          source: 'Error',
+          error: { message: 'Exception', details: error.message },
+          responsePreview: ''
+        });
+      }
+
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -266,6 +300,11 @@ export default function ExumaDisplay() {
 
             <MoonCard 
               response={moonResponse} 
+              isLoading={isLoading} 
+            />
+            
+            <SkySpaceCard 
+              response={skyResponse} 
               isLoading={isLoading} 
             />
             

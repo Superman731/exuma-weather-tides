@@ -1,13 +1,12 @@
-export default async function getTideData() {
+export default async function getTideData({ base44 }) {
   const latitude = 23.4334;
   const longitude = -75.6932;
   const retrievedAt = new Date().toISOString();
   
   try {
-    const response = await fetch(
-      `https://www.worldtides.info/api/v3?heights&extremes&lat=${latitude}&lon=${longitude}&key=f8e0ea4a-d7f5-48fc-9baa-1c9d8dcf232d`,
-      { timeout: 10000 }
-    );
+    const url = `https://www.worldtides.info/api/v3?heights&extremes&lat=${latitude}&lon=${longitude}&key=f8e0ea4a-d7f5-48fc-9baa-1c9d8dcf232d`;
+    
+    const response = await base44.asServiceRole.fetch(url);
     
     if (!response.ok) {
       return {
