@@ -31,9 +31,18 @@ Deno.serve(async (req) => {
     // Weather
     if (bodyAction === 'weather') {
       const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FNassau&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=7`;
-      
-      const response = await fetch(weatherUrl);
-      const data = await response.json();
+
+      // Get water temperature from Open-Meteo Marine API
+      const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_direction,wave_period,ocean_current_velocity,ocean_current_direction&hourly=sea_surface_temperature&timezone=America%2FNassau&temperature_unit=fahrenheit`;
+
+      const [weatherResponse, marineResponse] = await Promise.all([
+        fetch(weatherUrl),
+        fetch(marineUrl)
+      ]);
+
+      const data = await weatherResponse.json();
+      const marineData = await marineResponse.json();
+
 
       const weatherCodes = {
         0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
@@ -68,7 +77,10 @@ Deno.serve(async (req) => {
             windSpeed: Math.round(data.current?.wind_speed_10m || 0),
             windDirection: data.current?.wind_direction_10m,
             windGusts: Math.round(data.current?.wind_gusts_10m || 0),
-            pressure: Math.round(data.current?.pressure_msl || 0)
+            pressure: Math.round(data.current?.pressure_msl || 0),
+            waterTemp: marineData.hourly?.sea_surface_temperature?.[0] ? Math.round(marineData.hourly.sea_surface_temperature[0]) : null,
+            waveHeight: marineData.current?.wave_height ? (marineData.current.wave_height * 3.28084).toFixed(1) : null,
+            wavePeriod: marineData.current?.wave_period || null
           },
           today: {
             tempHigh: dailyData[0]?.high || 0,
@@ -197,25 +209,31 @@ Deno.serve(async (req) => {
 
       let phase = 'Unknown';
       let note = '';
-      
+
       if (daysSinceNew < 1.84566) {
         phase = 'New Moon';
         note = 'Perfect for stargazing - dark skies tonight!';
       } else if (daysSinceNew < 5.53699) {
         phase = 'Waxing Crescent';
+        note = 'Growing light - good for evening activities';
       } else if (daysSinceNew < 9.22831) {
         phase = 'First Quarter';
+        note = 'Half moon rising - balanced lighting';
       } else if (daysSinceNew < 12.91963) {
         phase = 'Waxing Gibbous';
+        note = 'Nearly full - bright evenings ahead';
       } else if (daysSinceNew < 16.61096) {
         phase = 'Full Moon';
         note = 'Bright moonlight - great for night walks!';
       } else if (daysSinceNew < 20.30228) {
         phase = 'Waning Gibbous';
+        note = 'Still bright - excellent visibility';
       } else if (daysSinceNew < 23.99361) {
         phase = 'Last Quarter';
+        note = 'Half moon setting - morning light';
       } else {
         phase = 'Waning Crescent';
+        note = 'Darkening skies - stars emerging';
       }
 
       return Response.json({
@@ -243,7 +261,7 @@ Deno.serve(async (req) => {
 
       let stargazingWindow = 'Poor viewing';
       if (moonIllumination < 30 && (hour >= 20 || hour < 5)) {
-        stargazingWindow = '8:00 PM - 5:00 AM (New moon - excellent!)';
+        stargazingWindow = '8:00 PM - 5:00 AM (Dark skies - excellent!)';
       } else if (hour >= 20 || hour < 5) {
         stargazingWindow = '8:00 PM - 5:00 AM';
       }

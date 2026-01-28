@@ -112,6 +112,23 @@ export default function OceanRealityCard({ response, tideResponse, isLoading }) 
             <span className="text-white font-light">{current.humidity}%</span>
           </div>
         )}
+
+        {current.waterTemp && (
+          <div className="flex items-center justify-between p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
+            <div className="flex items-center gap-2">
+              <Waves className="w-4 h-4 text-cyan-300" />
+              <span className="text-sky-200/60 text-sm">Water Temp</span>
+            </div>
+            <span className="text-white font-light">{current.waterTemp}°F</span>
+          </div>
+        )}
+
+        {current.waveHeight && (
+          <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+            <span className="text-sky-200/60 text-sm">Wave Height</span>
+            <span className="text-white font-light">{current.waveHeight} ft</span>
+          </div>
+        )}
       </div>
 
       <CardFooter
