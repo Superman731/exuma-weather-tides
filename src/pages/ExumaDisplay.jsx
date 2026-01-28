@@ -34,7 +34,30 @@ export default function ExumaDisplay() {
     setIsLoading(true);
     
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      // Call backend functions for reliable API data
+      const [tideData, weatherData, astronomyData] = await Promise.all([
+        base44.functions.getTideData(),
+        base44.functions.getWeatherData(),
+        base44.functions.getAstronomyData()
+      ]);
+
+      setWeather(weatherData.weather);
+      setForecastData(weatherData.forecastData);
+      setOceanData(weatherData.oceanData);
+      setTides(tideData);
+      setSunData(astronomyData.sunData);
+      setAstronomy(astronomyData.astronomy);
+      setMoonData(astronomyData.moonData);
+      setSkyData(astronomyData.skyData);
+      setContextData(astronomyData.contextData);
+      setLifestyleData(astronomyData.lifestyleData);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
         prompt: `Get REAL-TIME data for Georgetown, Exuma, Bahamas (23.5°N, 75.8°W) for ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}.
 
 CRITICAL: Search these authoritative sources NOW:

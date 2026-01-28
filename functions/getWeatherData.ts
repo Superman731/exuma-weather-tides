@@ -1,6 +1,7 @@
 export default async function getWeatherData() {
-  const latitude = 23.5;
-  const longitude = -75.8;
+  // Tropic of Cancer Beach, Exuma coordinates
+  const latitude = 23.4334;
+  const longitude = -75.6932;
   
   try {
     // Using Open-Meteo (free, no API key needed)
