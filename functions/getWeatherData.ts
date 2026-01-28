@@ -1,6 +1,6 @@
 import { httpGetJson } from './_httpHelper.js';
 
-export default async function getWeatherData() {
+Deno.serve(async (req) => {
   const latitude = 23.439714577294154;
   const longitude = -75.60141194341342;
   const retrievedAt = new Date().toISOString();
@@ -11,7 +11,7 @@ export default async function getWeatherData() {
     const result = await httpGetJson(url, "Open-Meteo");
     
     if (!result.ok) {
-      return {
+      const errorResponse = {
         ok: false,
         source: "Open-Meteo",
         retrievedAt,
@@ -29,12 +29,16 @@ export default async function getWeatherData() {
           })
         }
       };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
     
     const data = result.json;
     
     if (!data.current || !data.daily) {
-      return {
+      const errorResponse = {
         ok: false,
         source: "Open-Meteo",
         retrievedAt,
@@ -48,6 +52,10 @@ export default async function getWeatherData() {
           details: "Missing current or daily data"
         }
       };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
     
     const current = data.current;
@@ -59,7 +67,7 @@ export default async function getWeatherData() {
       61: 'Light Rain', 63: 'Rain', 65: 'Heavy Rain', 80: 'Rain Showers', 95: 'Thunderstorm'
     };
     
-    return {
+    const successResponse = {
       ok: true,
       source: "Open-Meteo",
       retrievedAt,
@@ -114,8 +122,13 @@ export default async function getWeatherData() {
       error: null
     };
     
+    return new Response(JSON.stringify(successResponse), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
   } catch (err) {
-    return {
+    const errorResponse = {
       ok: false,
       source: "Open-Meteo",
       retrievedAt,
@@ -129,5 +142,10 @@ export default async function getWeatherData() {
         details: err.stack || JSON.stringify(err)
       }
     };
+    
+    return new Response(JSON.stringify(errorResponse), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
-}
+});

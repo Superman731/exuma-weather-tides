@@ -4,6 +4,7 @@ import { Activity } from 'lucide-react';
 export default function BackendProbe() {
   const [probeResults, setProbeResults] = useState([]);
   const [isProbing, setIsProbing] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const probeEndpoint = async (path, method = 'GET') => {
     const startTime = Date.now();
@@ -67,22 +68,31 @@ export default function BackendProbe() {
   };
 
   return (
-    <div className="fixed top-4 left-4 z-50 bg-gray-900 border border-gray-700 rounded-lg p-4 max-w-3xl max-h-[80vh] overflow-auto">
-      <div className="flex items-center justify-between mb-4">
+    <div className="fixed top-4 left-4 z-50 bg-gray-900 border border-gray-700 rounded-lg max-w-3xl">
+      <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-2">
           <Activity className="w-5 h-5 text-cyan-400" />
           <h3 className="text-white font-semibold">Backend Probe</h3>
         </div>
-        <button
-          onClick={runProbe}
-          disabled={isProbing}
-          className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 text-white rounded text-sm"
-        >
-          {isProbing ? 'Probing...' : 'Run Probe'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={runProbe}
+            disabled={isProbing}
+            className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 text-white rounded text-sm"
+          >
+            {isProbing ? 'Probing...' : 'Run Probe'}
+          </button>
+          <button
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm"
+          >
+            {isMinimized ? '▼' : '▲'}
+          </button>
+        </div>
       </div>
 
-      {probeResults.length > 0 && (
+      {!isMinimized && probeResults.length > 0 && (
+        <div className="p-4 pt-0 max-h-[70vh] overflow-auto">(
         <div className="space-y-4 text-xs font-mono">
           {probeResults.map((result, index) => (
             <div key={index} className={`p-3 rounded border ${result.ok ? 'bg-green-900/20 border-green-700' : 'bg-red-900/20 border-red-700'}`}>
@@ -108,6 +118,7 @@ export default function BackendProbe() {
               </div>
             </div>
           ))}
+        </div>
         </div>
       )}
     </div>

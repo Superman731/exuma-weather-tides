@@ -1,14 +1,10 @@
-// Absolute minimal function - no imports, no dependencies, cannot fail
-export default async function ping() {
-  return {
+Deno.serve(async (req) => {
+  return new Response(JSON.stringify({
+    ok: true,
+    message: "pong",
+    timestamp: new Date().toISOString()
+  }), {
     status: 200,
-    body: JSON.stringify({
-      ok: true,
-      message: "pong",
-      timestamp: new Date().toISOString()
-    }),
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  };
-}
+    headers: { 'Content-Type': 'application/json' }
+  });
+});

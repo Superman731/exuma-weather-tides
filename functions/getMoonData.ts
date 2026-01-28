@@ -1,22 +1,19 @@
-export default async function getMoonData() {
+Deno.serve(async (req) => {
   const latitude = 23.439714577294154;
   const longitude = -75.60141194341342;
   const retrievedAt = new Date().toISOString();
   
-  // Calculate moon phase using astronomical algorithms (accurate)
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
   const day = now.getDate();
   
   try {
-    // Julian date calculation
     const a = Math.floor((14 - month) / 12);
     const y = year + 4800 - a;
     const m = month + 12 * a - 3;
     const jd = day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
     
-    // Moon phase calculation based on known new moon epoch
     const daysSinceNewMoon = jd - 2451549.5;
     const newMoons = daysSinceNewMoon / 29.53;
     const phase = (newMoons - Math.floor(newMoons)) * 29.53;
@@ -51,7 +48,7 @@ export default async function getMoonData() {
       illumination = 0;
     }
     
-    return {
+    const successResponse = {
       ok: true,
       source: "Astronomical Calculation",
       retrievedAt,
@@ -62,15 +59,20 @@ export default async function getMoonData() {
       data: {
         phase: phaseName,
         illumination,
-        moonrise: null, // Not available without a paid API
-        moonset: null,   // Not available without a paid API
+        moonrise: null,
+        moonset: null,
         note: "Moonrise/moonset require a specialized API"
       },
       error: null
     };
     
+    return new Response(JSON.stringify(successResponse), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
   } catch (err) {
-    return {
+    const errorResponse = {
       ok: false,
       source: "Astronomical Calculation",
       retrievedAt,
@@ -84,5 +86,10 @@ export default async function getMoonData() {
         details: err.stack || JSON.stringify(err)
       }
     };
+    
+    return new Response(JSON.stringify(errorResponse), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
-}
+});

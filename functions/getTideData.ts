@@ -1,15 +1,14 @@
 import { httpGetJson } from './_httpHelper.js';
 
-export default async function getTideData() {
+Deno.serve(async (req) => {
   const latitude = 23.439714577294154;
   const longitude = -75.60141194341342;
   const retrievedAt = new Date().toISOString();
   
-  // Check for API key
-  const apiKey = process.env.TIDE_API_KEY || 'f8e0ea4a-d7f5-48fc-9baa-1c9d8dcf232d';
+  const apiKey = Deno.env.get('TIDE_API_KEY') || 'f8e0ea4a-d7f5-48fc-9baa-1c9d8dcf232d';
   
   if (!apiKey || apiKey === 'YOUR_KEY_HERE') {
-    return {
+    const errorResponse = {
       ok: false,
       source: "WorldTides",
       retrievedAt,
@@ -23,6 +22,10 @@ export default async function getTideData() {
         details: "WorldTides API requires a valid API key. Set TIDE_API_KEY environment variable."
       }
     };
+    return new Response(JSON.stringify(errorResponse), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
   
   try {
@@ -31,7 +34,7 @@ export default async function getTideData() {
     const result = await httpGetJson(url, "WorldTides");
     
     if (!result.ok) {
-      return {
+      const errorResponse = {
         ok: false,
         source: "WorldTides",
         retrievedAt,
@@ -49,12 +52,37 @@ export default async function getTideData() {
           })
         }
       };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
     
     const apiData = result.json;
     
     if (apiData.error) {
-      return {
+      const errorResponse = {
+        ok: false,
+        source: "WorldTides",
+        retrievedAt,
+        lat: latitude,
+        lon: longitude,
+        units: {},
+        data: null,
+        error: {
+          status: apiData.status || 400,
+          message: "WorldTides API error",
+          details: apiData.error
+        }
+      };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    if (!apiData.extremes || !apiData.heights) {
+      const errorResponse = {
         ok: false,
         source: "WorldTides",
         retrievedAt,
@@ -64,94 +92,74 @@ export default async function getTideData() {
         data: null,
         error: {
           status: 500,
-          message: "WorldTides returned error",
-          details: apiData.error
+          message: "Incomplete tide data",
+          details: "Missing extremes or heights"
         }
       };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
     
     const now = new Date();
-    const todayExtremes = (apiData.extremes || []).filter(extreme => {
-      const extremeDate = new Date(extreme.dt * 1000);
-      return extremeDate.toDateString() === now.toDateString();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+    
+    const todayExtremes = apiData.extremes.filter(e => {
+      const eDate = new Date(e.dt * 1000);
+      return eDate >= todayStart && eDate < todayEnd;
     });
     
-    const highTides = todayExtremes.filter(e => e.type === 'High');
-    const lowTides = todayExtremes.filter(e => e.type === 'Low');
-    
-    const nextHigh = highTides.find(t => new Date(t.dt * 1000) > now) || highTides[0];
-    const nextLow = lowTides.find(t => new Date(t.dt * 1000) > now) || lowTides[0];
-    
-    // Determine tide status (rising/falling/slack)
-    let tideStatus = "Unknown";
-    if (apiData.heights && apiData.heights.length >= 2) {
-      const recentHeights = apiData.heights.slice(-2);
-      if (recentHeights[1].height > recentHeights[0].height) {
-        tideStatus = "Rising";
-      } else if (recentHeights[1].height < recentHeights[0].height) {
-        tideStatus = "Falling";
-      } else {
-        tideStatus = "Slack";
+    let highTide = null, lowTide = null;
+    for (const extreme of todayExtremes) {
+      const eDate = new Date(extreme.dt * 1000);
+      const timeStr = eDate.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      });
+      
+      if (extreme.type === 'High') {
+        if (!highTide || eDate > now) {
+          highTide = { time: timeStr, height: extreme.height.toFixed(1) };
+        }
+      } else if (extreme.type === 'Low') {
+        if (!lowTide || eDate > now) {
+          lowTide = { time: timeStr, height: extreme.height.toFixed(1) };
+        }
       }
     }
     
-    if (!nextHigh || !nextLow) {
-      return {
-        ok: false,
-        source: "WorldTides",
-        retrievedAt,
-        lat: latitude,
-        lon: longitude,
-        units: { height: "feet" },
-        data: null,
-        error: {
-          status: 500,
-          message: "No tide extremes found for today",
-          details: "API returned data but no high/low tides for current date"
-        }
-      };
+    const nextExtreme = apiData.extremes.find(e => new Date(e.dt * 1000) > now);
+    let tideStatus = 'Unknown';
+    if (nextExtreme) {
+      tideStatus = nextExtreme.type === 'High' ? 'Rising' : 'Falling';
     }
     
-    return {
+    const successResponse = {
       ok: true,
       source: "WorldTides",
       retrievedAt,
-      sourceTimestamp: apiData.requestDateTime || null,
+      sourceTimestamp: null,
       lat: latitude,
       lon: longitude,
       units: { height: "feet" },
       data: {
-        highTide: new Date(nextHigh.dt * 1000).toLocaleTimeString('en-US', { 
-          hour: 'numeric', 
-          minute: '2-digit', 
-          hour12: true,
-          timeZone: 'America/Nassau'
-        }),
-        highTideHeight: `${(nextHigh.height * 3.28084).toFixed(1)} ft`,
-        lowTide: new Date(nextLow.dt * 1000).toLocaleTimeString('en-US', { 
-          hour: 'numeric', 
-          minute: '2-digit', 
-          hour12: true,
-          timeZone: 'America/Nassau'
-        }),
-        lowTideHeight: `${(nextLow.height * 3.28084).toFixed(1)} ft`,
-        tideStatus,
-        allTodayTides: todayExtremes.map(e => ({
-          type: e.type,
-          time: new Date(e.dt * 1000).toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
-            minute: '2-digit', 
-            hour12: true,
-            timeZone: 'America/Nassau'
-          }),
-          height: `${(e.height * 3.28084).toFixed(1)} ft`
-        }))
+        highTide,
+        lowTide,
+        tideStatus
       },
       error: null
     };
     
+    return new Response(JSON.stringify(successResponse), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
   } catch (err) {
-    return {
+    const errorResponse = {
       ok: false,
       source: "WorldTides",
       retrievedAt,
@@ -165,5 +173,10 @@ export default async function getTideData() {
         details: err.stack || JSON.stringify(err)
       }
     };
+    
+    return new Response(JSON.stringify(errorResponse), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
-}
+});

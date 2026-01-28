@@ -21,23 +21,21 @@ const exumaFacts = [
   "Exuma salt was once a major export, with salt raking ponds still visible on Little Exuma."
 ];
 
-export default async function getFunFact() {
+Deno.serve(async (req) => {
   const latitude = 23.439714577294154;
   const longitude = -75.60141194341342;
   const retrievedAt = new Date().toISOString();
   
   try {
-    // Get Nassau time
     const nassauTime = new Date().toLocaleString('en-US', { timeZone: 'America/Nassau' });
     const now = new Date(nassauTime);
     const hours = now.getHours();
     const day = now.getDate();
     
-    // Rotate every 4 hours: 0-3, 4-7, 8-11, 12-15, 16-19, 20-23
     const block = Math.floor(hours / 4);
     const factIndex = (day * 6 + block) % exumaFacts.length;
     
-    return {
+    const successResponse = {
       ok: true,
       source: "Local Facts",
       retrievedAt,
@@ -54,8 +52,13 @@ export default async function getFunFact() {
       error: null
     };
     
+    return new Response(JSON.stringify(successResponse), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
   } catch (err) {
-    return {
+    const errorResponse = {
       ok: false,
       source: "Local Facts",
       retrievedAt,
@@ -69,5 +72,10 @@ export default async function getFunFact() {
         details: err.stack || JSON.stringify(err)
       }
     };
+    
+    return new Response(JSON.stringify(errorResponse), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
-}
+});

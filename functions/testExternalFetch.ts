@@ -1,6 +1,6 @@
 import { httpGetJson } from './_httpHelper.js';
 
-export default async function testExternalFetch() {
+Deno.serve(async (req) => {
   const latitude = 23.439714577294154;
   const longitude = -75.60141194341342;
   const retrievedAt = new Date().toISOString();
@@ -11,7 +11,7 @@ export default async function testExternalFetch() {
     const result = await httpGetJson(url, "Open-Meteo-Test");
     
     if (!result.ok) {
-      return {
+      const errorResponse = {
         ok: false,
         source: "Open-Meteo-Test",
         retrievedAt,
@@ -30,9 +30,13 @@ export default async function testExternalFetch() {
           })
         }
       };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
     
-    return {
+    const successResponse = {
       ok: true,
       source: "Open-Meteo-Test",
       retrievedAt,
@@ -48,8 +52,13 @@ export default async function testExternalFetch() {
       error: null
     };
     
+    return new Response(JSON.stringify(successResponse), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
   } catch (err) {
-    return {
+    const errorResponse = {
       ok: false,
       source: "Open-Meteo-Test",
       retrievedAt,
@@ -64,5 +73,10 @@ export default async function testExternalFetch() {
         details: err.stack || JSON.stringify(err)
       }
     };
+    
+    return new Response(JSON.stringify(errorResponse), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
-}
+});

@@ -1,10 +1,10 @@
-export default async function getHealthcheck() {
+Deno.serve(async (req) => {
   try {
     const latitude = 23.439714577294154;
     const longitude = -75.60141194341342;
     const retrievedAt = new Date().toISOString();
     
-    return {
+    const result = {
       ok: true,
       source: "internal",
       retrievedAt,
@@ -19,8 +19,13 @@ export default async function getHealthcheck() {
       },
       error: null
     };
+    
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
   } catch (err) {
-    return {
+    const errorResult = {
       ok: false,
       source: "internal",
       retrievedAt: new Date().toISOString(),
@@ -35,5 +40,10 @@ export default async function getHealthcheck() {
         details: err.stack || JSON.stringify(err)
       }
     };
+    
+    return new Response(JSON.stringify(errorResult), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
-}
+});
