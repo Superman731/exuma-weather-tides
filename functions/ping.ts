@@ -80,54 +80,56 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Tides
+    // Tides - Using NOAA free API (Settlement Point, Grand Bahama - closest station)
     if (bodyAction === 'tides') {
-      const WORLDTIDES_API_KEY = Deno.env.get('WORLDTIDES_API_KEY') || 'demo-key';
-      const tideUrl = `https://www.worldtides.info/api/v3?extremes&lat=${lat}&lon=${lon}&key=${WORLDTIDES_API_KEY}`;
-      
+      const stationId = '8670870'; // NOAA station: Settlement Point, Grand Bahama
+      const today = new Date();
+      const beginDate = today.toISOString().split('T')[0].replace(/-/g, '');
+      const endDate = new Date(today.getTime() + 86400000).toISOString().split('T')[0].replace(/-/g, '');
+
+      const tideUrl = `https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?begin_date=${beginDate}&end_date=${endDate}&station=${stationId}&product=predictions&datum=MLLW&time_zone=lst_ldt&interval=hilo&units=english&application=base44&format=json`;
+
       const response = await fetch(tideUrl);
       const data = await response.json();
 
       if (data.error) {
         return Response.json({
           ok: false,
-          error: { message: 'Tide API error', details: data.error }
+          error: { message: 'NOAA Tide API error', details: data.error?.message || 'Unknown error' }
         });
       }
 
-      const now = new Date();
-      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() / 1000;
-      const todayEnd = todayStart + 86400;
+      const now = Date.now();
+      const predictions = data.predictions || [];
 
-      const todayTides = (data.extremes || []).filter(t => t.dt >= todayStart && t.dt < todayEnd);
-      const highTides = todayTides.filter(t => t.type === 'High');
-      const lowTides = todayTides.filter(t => t.type === 'Low');
+      const highTides = predictions.filter(t => t.type === 'H');
+      const lowTides = predictions.filter(t => t.type === 'L');
 
-      const nextHigh = highTides.find(t => t.dt > now.getTime() / 1000) || highTides[0];
-      const nextLow = lowTides.find(t => t.dt > now.getTime() / 1000) || lowTides[0];
+      const nextHigh = highTides.find(t => new Date(t.t).getTime() > now) || highTides[0];
+      const nextLow = lowTides.find(t => new Date(t.t).getTime() > now) || lowTides[0];
 
       let tideStatus = 'Unknown';
       if (nextHigh && nextLow) {
-        tideStatus = nextHigh.dt < nextLow.dt ? 'Rising' : 'Falling';
+        tideStatus = new Date(nextHigh.t).getTime() < new Date(nextLow.t).getTime() ? 'Rising' : 'Falling';
       }
 
       return Response.json({
         ok: true,
-        source: 'WorldTides API',
+        source: 'NOAA Tides & Currents (Free)',
         retrievedAt: new Date().toISOString(),
         lat, lon,
         data: {
           nextHigh: nextHigh ? {
-            time: new Date(nextHigh.dt * 1000).toLocaleTimeString('en-US', { 
-              hour: 'numeric', minute: '2-digit', timeZone: 'America/Nassau' 
+            time: new Date(nextHigh.t).toLocaleTimeString('en-US', { 
+              hour: 'numeric', minute: '2-digit'
             }),
-            height: `${nextHigh.height.toFixed(1)} ft`
+            height: `${parseFloat(nextHigh.v).toFixed(1)} ft`
           } : null,
           nextLow: nextLow ? {
-            time: new Date(nextLow.dt * 1000).toLocaleTimeString('en-US', { 
-              hour: 'numeric', minute: '2-digit', timeZone: 'America/Nassau' 
+            time: new Date(nextLow.t).toLocaleTimeString('en-US', { 
+              hour: 'numeric', minute: '2-digit'
             }),
-            height: `${nextLow.height.toFixed(1)} ft`
+            height: `${parseFloat(nextLow.v).toFixed(1)} ft`
           } : null,
           tideStatus
         }
