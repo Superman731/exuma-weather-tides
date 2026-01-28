@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sparkles, AlertCircle } from 'lucide-react';
+import { Moon, Sparkles, AlertCircle, ArrowUp, ArrowDown } from 'lucide-react';
 import CardFooter from './CardFooter';
 
 const moonEmojis = {
@@ -89,6 +89,29 @@ export default function MoonCard({ response, isLoading }) {
       {moonData.note && (
         <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20 mb-4">
           <p className="text-amber-200/80 text-xs">{moonData.note}</p>
+        </div>
+      )}
+
+      {(moonData.moonrise || moonData.moonset) && (
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {moonData.moonrise && (
+            <div className="p-3 bg-white/5 rounded-xl">
+              <div className="flex items-center gap-2 mb-1">
+                <ArrowUp className="w-4 h-4 text-amber-300" />
+                <p className="text-sky-200/60 text-xs uppercase tracking-wider">Moonrise</p>
+              </div>
+              <p className="text-white text-sm font-light">{moonData.moonrise}</p>
+            </div>
+          )}
+          {moonData.moonset && (
+            <div className="p-3 bg-white/5 rounded-xl">
+              <div className="flex items-center gap-2 mb-1">
+                <ArrowDown className="w-4 h-4 text-amber-300" />
+                <p className="text-sky-200/60 text-xs uppercase tracking-wider">Moonset</p>
+              </div>
+              <p className="text-white text-sm font-light">{moonData.moonset}</p>
+            </div>
+          )}
         </div>
       )}
 
