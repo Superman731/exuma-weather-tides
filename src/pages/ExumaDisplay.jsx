@@ -59,7 +59,6 @@ export default function ExumaDisplay() {
     }
   };
 
-
   useEffect(() => {
     fetchData();
     
@@ -72,11 +71,11 @@ export default function ExumaDisplay() {
   useEffect(() => {
     const checkNightMode = () => {
       const hour = new Date().getHours();
-      setIsDark(hour < 6 || hour >= 19); // Dark between 7 PM and 6 AM
+      setIsDark(hour < 6 || hour >= 19);
     };
     
     checkNightMode();
-    const interval = setInterval(checkNightMode, 60000); // Check every minute
+    const interval = setInterval(checkNightMode, 60000);
     return () => clearInterval(interval);
   }, []);
 
