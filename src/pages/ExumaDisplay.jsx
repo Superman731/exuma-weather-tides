@@ -35,15 +35,26 @@ export default function ExumaDisplay() {
     
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `CRITICAL: Pull ACTUAL REAL-TIME DATA for Georgetown, Exuma, Bahamas (23.5° N, 75.8° W) for TODAY ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.
+        prompt: `ABSOLUTE REQUIREMENT: Search the web RIGHT NOW and pull LIVE DATA for Georgetown, Exuma, Bahamas for ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}.
 
-DO NOT GUESS OR ESTIMATE. Use web search to get CURRENT data from these AUTHORITATIVE sources:
-- Tides: NOAA tide predictions (tidesandcurrents.noaa.gov) or XTide data for Georgetown
-- Weather: weather.com or National Weather Service for exact current conditions and 7-day forecast
-- Astronomy: timeanddate.com sun/moon data for Georgetown, Exuma
-- Ocean conditions: NOAA buoy data or Caribbean marine forecasts
+⚠️ DO NOT USE GENERAL KNOWLEDGE OR ESTIMATES. SEARCH THESE EXACT SOURCES:
 
-Search the web NOW and provide ACTUAL CURRENT data:
+TIDES (CRITICAL - MUST BE EXACT):
+Search: "Tropic of Cancer Beach Exuma tide times today" OR "Georgetown Exuma tides ${new Date().toLocaleDateString()}"
+Check: tideschart.com, tides.net, or timeanddate.com/tide
+Return: Today's ACTUAL high/low tide times (in 12-hour format like "4:22 PM") and heights in feet with decimal precision
+
+WEATHER FORECAST:
+Search: "Georgetown Exuma Bahamas weather forecast ${new Date().toLocaleDateString()}"
+Check: weather.com exact 7-day forecast with day/night breakdown
+Return: Real current temp, feels like, humidity, cloud cover, rain %, plus 7-day forecast
+
+ASTRONOMY:
+Search: "Georgetown Exuma sunrise sunset moonrise ${new Date().toLocaleDateString()}"  
+Check: timeanddate.com for exact times
+Return: Today's actual sunrise, sunset, moonrise, moonset, moon phase
+
+Verify your search results match today's actual date. Pull from live web sources:
 
 WEATHER:
 - Current temp (°F), feels like temp, condition, wind speed (mph), wind gusts (mph), wind direction (e.g., "NE"), humidity %, cloud cover %, rain chance %, rain forecast by hour
