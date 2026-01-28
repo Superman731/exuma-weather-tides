@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, AlertCircle, CheckCircle, XCircle } from 'lucid
 
 export default function DebugPanel({ apiCalls = [] }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   if (apiCalls.length === 0) {
     return null;
@@ -10,16 +11,24 @@ export default function DebugPanel({ apiCalls = [] }) {
 
   return (
     <div className="fixed bottom-4 right-4 z-50 max-w-2xl">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="bg-gray-900 text-white px-4 py-2 rounded-t-lg border border-gray-700 hover:bg-gray-800 transition-colors flex items-center gap-2"
-      >
-        {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-        Debug Panel ({apiCalls.length} calls)
-      </button>
+      <div className="bg-gray-900 text-white px-4 py-2 rounded-t-lg border border-gray-700 flex items-center justify-between gap-2">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-2 hover:text-cyan-400 transition-colors"
+        >
+          {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+          Debug Panel ({apiCalls.length} calls)
+        </button>
+        <button
+          onClick={() => setIsMinimized(!isMinimized)}
+          className="hover:text-cyan-400 transition-colors px-2"
+        >
+          {isMinimized ? '□' : '−'}
+        </button>
+      </div>
       
-      {isOpen && (
-        <div className="bg-gray-900 border border-gray-700 rounded-t-lg max-h-96 overflow-y-auto text-xs font-mono">
+      {isOpen && !isMinimized && (
+        <div className="bg-gray-900 border border-gray-700 border-t-0 max-h-96 overflow-y-auto text-xs font-mono">
           {apiCalls.map((call, index) => (
             <div key={index} className="border-b border-gray-700 p-3">
               <div className="flex items-center gap-2 mb-2">
