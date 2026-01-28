@@ -47,16 +47,20 @@ export default function BackendProbe() {
     setIsProbing(true);
     const results = [];
 
-    // Test ping
-    results.push(await probeEndpoint('/functions/ping', 'GET'));
-    results.push(await probeEndpoint('/functions/ping', 'POST'));
-    
-    // Test healthcheck
-    results.push(await probeEndpoint('/functions/healthcheck', 'GET'));
-    results.push(await probeEndpoint('/functions/healthcheck', 'POST'));
-    
-    // Test a known working route (if any)
-    results.push(await probeEndpoint('/functions/getWeatherData', 'POST'));
+    // Test multiple possible routes for backend functions
+    const testPaths = [
+      '/functions/ping',
+      '/api/functions/ping',
+      '/function/ping',
+      '/.netlify/functions/ping',
+      '/functions/getHealthcheck',
+      '/api/functions/getHealthcheck'
+    ];
+
+    for (const path of testPaths) {
+      results.push(await probeEndpoint(path, 'GET'));
+      results.push(await probeEndpoint(path, 'POST'));
+    }
 
     setProbeResults(results);
     setIsProbing(false);

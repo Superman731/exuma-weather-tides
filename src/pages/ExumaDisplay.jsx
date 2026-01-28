@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { fetchWeatherDirect } from '@/components/exuma/WeatherFetchDirect';
 import TimeDisplay from '@/components/exuma/TimeDisplay';
 import WeatherForecastCard from '@/components/exuma/WeatherForecastCard';
 import TideCard from '@/components/exuma/TideCard';
@@ -99,15 +100,15 @@ export default function ExumaDisplay() {
         });
       }
 
-      // Weather
+      // Weather - TEMPORARY: Direct client-side fetch (backend unavailable)
       const weatherStart = Date.now();
       const weatherStartTime = new Date().toISOString();
       try {
-        const weatherData = await base44.functions.invoke('getWeatherData', {});
+        const weatherData = await fetchWeatherDirect();
         const weatherEnd = Date.now();
         setWeatherResponse(weatherData);
         calls.push({
-          functionName: 'getWeatherData',
+          functionName: 'fetchWeatherDirect (CLIENT)',
           startTime: weatherStartTime,
           endTime: new Date().toISOString(),
           duration: weatherEnd - weatherStart,
@@ -120,7 +121,7 @@ export default function ExumaDisplay() {
         });
       } catch (error) {
         calls.push({
-          functionName: 'getWeatherData',
+          functionName: 'fetchWeatherDirect (CLIENT)',
           startTime: weatherStartTime,
           endTime: new Date().toISOString(),
           duration: Date.now() - weatherStart,
@@ -131,165 +132,85 @@ export default function ExumaDisplay() {
         });
       }
 
-      // Tides
-      const tideStart = Date.now();
-      const tideStartTime = new Date().toISOString();
-      try {
-        const tideData = await base44.functions.invoke('getTideData', {});
-        const tideEnd = Date.now();
-        setTideResponse(tideData);
-        calls.push({
-          functionName: 'getTideData',
-          startTime: tideStartTime,
-          endTime: new Date().toISOString(),
-          duration: tideEnd - tideStart,
-          ok: tideData.ok,
-          source: tideData.source,
-          lat: tideData.lat,
-          lon: tideData.lon,
-          error: tideData.error,
-          responsePreview: JSON.stringify(tideData).substring(0, 300)
-        });
-      } catch (error) {
-        calls.push({
-          functionName: 'getTideData',
-          startTime: tideStartTime,
-          endTime: new Date().toISOString(),
-          duration: Date.now() - tideStart,
-          ok: false,
-          source: 'Error',
-          error: { message: 'Exception', details: error.message },
-          responsePreview: ''
-        });
-      }
+      // Tides - SKIP: Backend unavailable
+      setTideResponse({
+        ok: false,
+        source: "Backend unavailable",
+        retrievedAt: new Date().toISOString(),
+        lat: 23.439714577294154,
+        lon: -75.60141194341342,
+        units: {},
+        data: null,
+        error: {
+          status: 404,
+          message: "Backend functions not deployed",
+          details: "Tide data requires backend deployment with API key"
+        }
+      });
 
-      // Astronomy
-      const astroStart = Date.now();
-      const astroStartTime = new Date().toISOString();
-      try {
-        const astroData = await base44.functions.invoke('getAstronomyData', {});
-        const astroEnd = Date.now();
-        setAstronomyResponse(astroData);
-        calls.push({
-          functionName: 'getAstronomyData',
-          startTime: astroStartTime,
-          endTime: new Date().toISOString(),
-          duration: astroEnd - astroStart,
-          ok: astroData.ok,
-          source: astroData.source,
-          lat: astroData.lat,
-          lon: astroData.lon,
-          error: astroData.error,
-          responsePreview: JSON.stringify(astroData).substring(0, 300)
-        });
-      } catch (error) {
-        calls.push({
-          functionName: 'getAstronomyData',
-          startTime: astroStartTime,
-          endTime: new Date().toISOString(),
-          duration: Date.now() - astroStart,
-          ok: false,
-          source: 'Error',
-          error: { message: 'Exception', details: error.message },
-          responsePreview: ''
-        });
-      }
+      // Astronomy - SKIP: Backend unavailable
+      setAstronomyResponse({
+        ok: false,
+        source: "Backend unavailable",
+        retrievedAt: new Date().toISOString(),
+        lat: 23.439714577294154,
+        lon: -75.60141194341342,
+        units: {},
+        data: null,
+        error: {
+          status: 404,
+          message: "Backend functions not deployed",
+          details: "Astronomy data requires backend deployment"
+        }
+      });
 
-      // Moon
-      const moonStart = Date.now();
-      const moonStartTime = new Date().toISOString();
-      try {
-        const moonData = await base44.functions.invoke('getMoonData', {});
-        const moonEnd = Date.now();
-        setMoonResponse(moonData);
-        calls.push({
-          functionName: 'getMoonData',
-          startTime: moonStartTime,
-          endTime: new Date().toISOString(),
-          duration: moonEnd - moonStart,
-          ok: moonData.ok,
-          source: moonData.source,
-          lat: moonData.lat,
-          lon: moonData.lon,
-          error: moonData.error,
-          responsePreview: JSON.stringify(moonData).substring(0, 300)
-        });
-      } catch (error) {
-        calls.push({
-          functionName: 'getMoonData',
-          startTime: moonStartTime,
-          endTime: new Date().toISOString(),
-          duration: Date.now() - moonStart,
-          ok: false,
-          source: 'Error',
-          error: { message: 'Exception', details: error.message },
-          responsePreview: ''
-        });
-      }
+      // Moon - SKIP: Backend unavailable
+      setMoonResponse({
+        ok: false,
+        source: "Backend unavailable",
+        retrievedAt: new Date().toISOString(),
+        lat: 23.439714577294154,
+        lon: -75.60141194341342,
+        units: {},
+        data: null,
+        error: {
+          status: 404,
+          message: "Backend functions not deployed",
+          details: "Moon data requires backend deployment"
+        }
+      });
 
-      // Fun Fact
-      const factStart = Date.now();
-      const factStartTime = new Date().toISOString();
-      try {
-        const factData = await base44.functions.invoke('getFunFact', {});
-        const factEnd = Date.now();
-        setFunFactResponse(factData);
-        calls.push({
-          functionName: 'getFunFact',
-          startTime: factStartTime,
-          endTime: new Date().toISOString(),
-          duration: factEnd - factStart,
-          ok: factData.ok,
-          source: factData.source,
-          lat: factData.lat,
-          lon: factData.lon,
-          error: factData.error,
-          responsePreview: JSON.stringify(factData).substring(0, 300)
-        });
-      } catch (error) {
-        calls.push({
-          functionName: 'getFunFact',
-          startTime: factStartTime,
-          endTime: new Date().toISOString(),
-          duration: Date.now() - factStart,
-          ok: false,
-          source: 'Error',
-          error: { message: 'Exception', details: error.message },
-          responsePreview: ''
-        });
-      }
+      // Fun Fact - SKIP: Backend unavailable
+      setFunFactResponse({
+        ok: false,
+        source: "Backend unavailable",
+        retrievedAt: new Date().toISOString(),
+        lat: 23.439714577294154,
+        lon: -75.60141194341342,
+        units: {},
+        data: null,
+        error: {
+          status: 404,
+          message: "Backend functions not deployed",
+          details: "Fun facts require backend deployment"
+        }
+      });
 
-      // Sky & Space
-      const skyStart = Date.now();
-      const skyStartTime = new Date().toISOString();
-      try {
-        const skyData = await base44.functions.invoke('getSkyData', {});
-        const skyEnd = Date.now();
-        setSkyResponse(skyData);
-        calls.push({
-          functionName: 'getSkyData',
-          startTime: skyStartTime,
-          endTime: new Date().toISOString(),
-          duration: skyEnd - skyStart,
-          ok: skyData.ok,
-          source: skyData.source,
-          lat: skyData.lat,
-          lon: skyData.lon,
-          error: skyData.error,
-          responsePreview: JSON.stringify(skyData).substring(0, 300)
-        });
-      } catch (error) {
-        calls.push({
-          functionName: 'getSkyData',
-          startTime: skyStartTime,
-          endTime: new Date().toISOString(),
-          duration: Date.now() - skyStart,
-          ok: false,
-          source: 'Error',
-          error: { message: 'Exception', details: error.message },
-          responsePreview: ''
-        });
-      }
+      // Sky & Space - SKIP: Backend unavailable
+      setSkyResponse({
+        ok: false,
+        source: "Backend unavailable",
+        retrievedAt: new Date().toISOString(),
+        lat: 23.439714577294154,
+        lon: -75.60141194341342,
+        units: {},
+        data: null,
+        error: {
+          status: 404,
+          message: "Backend functions not deployed",
+          details: "Sky data requires backend deployment"
+        }
+      });
 
       setLastUpdated(new Date());
     } catch (error) {
