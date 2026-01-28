@@ -120,6 +120,7 @@ export default function ExumaDisplay() {
           responsePreview: JSON.stringify(weatherData).substring(0, 300)
         });
       } catch (error) {
+        setWeatherResponse({ ok: false, error: { message: error.message, details: error.stack } });
         calls.push({
           functionName: 'getWeatherData',
           startTime: weatherStartTime,
@@ -152,6 +153,7 @@ export default function ExumaDisplay() {
           responsePreview: JSON.stringify(tideData).substring(0, 300)
         });
       } catch (error) {
+        setTideResponse({ ok: false, error: { message: error.message, details: error.stack } });
         calls.push({
           functionName: 'getTideData',
           startTime: tideStartTime,
@@ -184,6 +186,7 @@ export default function ExumaDisplay() {
           responsePreview: JSON.stringify(astroData).substring(0, 300)
         });
       } catch (error) {
+        setAstronomyResponse({ ok: false, error: { message: error.message, details: error.stack } });
         calls.push({
           functionName: 'getAstronomyData',
           startTime: astroStartTime,
@@ -216,6 +219,7 @@ export default function ExumaDisplay() {
           responsePreview: JSON.stringify(moonData).substring(0, 300)
         });
       } catch (error) {
+        setMoonResponse({ ok: false, error: { message: error.message, details: error.stack } });
         calls.push({
           functionName: 'getMoonData',
           startTime: moonStartTime,
@@ -248,6 +252,7 @@ export default function ExumaDisplay() {
           responsePreview: JSON.stringify(factData).substring(0, 300)
         });
       } catch (error) {
+        setFunFactResponse({ ok: false, error: { message: error.message, details: error.stack } });
         calls.push({
           functionName: 'getFunFact',
           startTime: factStartTime,
@@ -280,6 +285,7 @@ export default function ExumaDisplay() {
           responsePreview: JSON.stringify(skyData).substring(0, 300)
         });
       } catch (error) {
+        setSkyResponse({ ok: false, error: { message: error.message, details: error.stack } });
         calls.push({
           functionName: 'getSkyData',
           startTime: skyStartTime,
