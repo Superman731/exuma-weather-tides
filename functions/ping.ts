@@ -264,6 +264,11 @@ Deno.serve(async (req) => {
 
     // Sky
     if (bodyAction === 'sky') {
+      // Fetch weather data for cloud cover
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=cloud_cover,relative_humidity_2m&timezone=America%2FNassau`;
+      const weatherResponse = await fetch(weatherUrl);
+      const weatherData = await weatherResponse.json();
+
       const now = new Date();
       const month = now.getMonth();
       const hour = now.getHours();
@@ -276,11 +281,25 @@ Deno.serve(async (req) => {
       const moonPhase = ((now.getDate() + month * 2.5) % 29.53);
       const moonIllumination = Math.round((1 - Math.cos(moonPhase * 2 * Math.PI / 29.53)) / 2 * 100);
 
-      let stargazingWindow = 'Poor viewing';
-      if (moonIllumination < 30 && (hour >= 20 || hour < 5)) {
-        stargazingWindow = '8:00 PM - 5:00 AM (Dark skies - excellent!)';
-      } else if (hour >= 20 || hour < 5) {
-        stargazingWindow = '8:00 PM - 5:00 AM';
+      const cloudCover = weatherData.current?.cloud_cover || 50;
+      const humidity = weatherData.current?.relative_humidity_2m || 70;
+
+      // Calculate sky quality based on actual conditions
+      let skyQuality = 'Moderate';
+      let milkyWayVisible = false;
+
+      if (cloudCover < 30 && moonIllumination < 40 && humidity < 75 && (hour >= 21 || hour < 4)) {
+        skyQuality = 'Excellent';
+        milkyWayVisible = true;
+      } else if (cloudCover < 50 && moonIllumination < 60 && humidity < 85 && (hour >= 20 || hour < 5)) {
+        skyQuality = 'Good';
+        milkyWayVisible = moonIllumination < 40;
+      } else if (cloudCover < 70 && (hour >= 20 || hour < 5)) {
+        skyQuality = 'Fair';
+        milkyWayVisible = false;
+      } else {
+        skyQuality = 'Poor';
+        milkyWayVisible = false;
       }
 
       const meteorShowers = [
@@ -293,15 +312,17 @@ Deno.serve(async (req) => {
 
       return Response.json({
         ok: true,
-        source: 'Calculated',
+        source: 'Calculated + Open-Meteo',
         retrievedAt: new Date().toISOString(),
         lat, lon,
         data: {
           visiblePlanets,
           constellations,
-          stargazingWindow,
           meteorShower: activeShower?.name || 'None currently active',
-          milkyWayVisible: moonIllumination < 40 && (hour >= 21 || hour < 4)
+          milkyWayVisible,
+          skyQuality,
+          cloudCover,
+          humidity
         }
       });
     }
