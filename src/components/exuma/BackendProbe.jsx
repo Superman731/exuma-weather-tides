@@ -48,19 +48,20 @@ export default function BackendProbe() {
     setIsProbing(true);
     const results = [];
 
-    // Test multiple possible routes for backend functions
+    // Test correct backend function routes (singular /function/)
     const testPaths = [
-      '/functions/ping',
-      '/api/functions/ping',
       '/function/ping',
-      '/.netlify/functions/ping',
-      '/functions/getHealthcheck',
-      '/api/functions/getHealthcheck'
+      '/function/getHealthcheck',
+      '/function/getWeatherData',
+      '/function/getTideData',
+      '/function/getAstronomyData',
+      '/function/getMoonData',
+      '/function/getFunFact',
+      '/function/getSkyData'
     ];
 
     for (const path of testPaths) {
       results.push(await probeEndpoint(path, 'GET'));
-      results.push(await probeEndpoint(path, 'POST'));
     }
 
     setProbeResults(results);
@@ -92,7 +93,7 @@ export default function BackendProbe() {
       </div>
 
       {!isMinimized && probeResults.length > 0 && (
-        <div className="p-4 pt-0 max-h-[70vh] overflow-auto">(
+        <div className="p-4 pt-0 max-h-[70vh] overflow-auto">
         <div className="space-y-4 text-xs font-mono">
           {probeResults.map((result, index) => (
             <div key={index} className={`p-3 rounded border ${result.ok ? 'bg-green-900/20 border-green-700' : 'bg-red-900/20 border-red-700'}`}>
