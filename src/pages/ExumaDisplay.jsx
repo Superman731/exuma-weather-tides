@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import TimeDisplay from '@/components/exuma/TimeDisplay';
-import WeatherCard from '@/components/exuma/WeatherCard';
 import WeatherForecastCard from '@/components/exuma/WeatherForecastCard';
 import TideCard from '@/components/exuma/TideCard';
 import AstronomyCard from '@/components/exuma/AstronomyCard';
@@ -9,71 +8,205 @@ import FunFactCard from '@/components/exuma/FunFactCard';
 import OceanRealityCard from '@/components/exuma/OceanRealityCard';
 import SunDaylightCard from '@/components/exuma/SunDaylightCard';
 import MoonCard from '@/components/exuma/MoonCard';
-import SkySpaceCard from '@/components/exuma/SkySpaceCard';
-
-import IslandContextCard from '@/components/exuma/IslandContextCard';
-import LifestyleCard from '@/components/exuma/LifestyleCard';
 import SystemStatusCard from '@/components/exuma/SystemStatusCard';
+import DebugPanel from '@/components/exuma/DebugPanel';
 
 export default function ExumaDisplay() {
-  const [weather, setWeather] = useState(null);
-  const [forecastData, setForecastData] = useState(null);
-  const [tides, setTides] = useState(null);
-  const [astronomy, setAstronomy] = useState(null);
-  const [oceanData, setOceanData] = useState(null);
-  const [sunData, setSunData] = useState(null);
-  const [moonData, setMoonData] = useState(null);
-  const [skyData, setSkyData] = useState(null);
-  const [contextData, setContextData] = useState(null);
-  const [lifestyleData, setLifestyleData] = useState(null);
+  const [weatherResponse, setWeatherResponse] = useState(null);
+  const [tideResponse, setTideResponse] = useState(null);
+  const [astronomyResponse, setAstronomyResponse] = useState(null);
+  const [moonResponse, setMoonResponse] = useState(null);
+  const [funFactResponse, setFunFactResponse] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [isDark, setIsDark] = useState(false);
+  const [apiCalls, setApiCalls] = useState([]);
 
   const fetchData = async () => {
     setIsLoading(true);
+    const calls = [];
     
     try {
-      // Call backend functions for reliable API data
-      const [tideData, weatherData, astronomyData] = await Promise.all([
-        base44.functions.invoke('getTideData', {}),
-        base44.functions.invoke('getWeatherData', {}),
-        base44.functions.invoke('getAstronomyData', {})
-      ]);
+      // Weather
+      const weatherStart = Date.now();
+      const weatherStartTime = new Date().toISOString();
+      try {
+        const weatherData = await base44.functions.invoke('getWeatherData', {});
+        const weatherEnd = Date.now();
+        setWeatherResponse(weatherData);
+        calls.push({
+          functionName: 'getWeatherData',
+          startTime: weatherStartTime,
+          endTime: new Date().toISOString(),
+          duration: weatherEnd - weatherStart,
+          ok: weatherData.ok,
+          source: weatherData.source,
+          lat: weatherData.lat,
+          lon: weatherData.lon,
+          error: weatherData.error,
+          responsePreview: JSON.stringify(weatherData).substring(0, 300)
+        });
+      } catch (error) {
+        calls.push({
+          functionName: 'getWeatherData',
+          startTime: weatherStartTime,
+          endTime: new Date().toISOString(),
+          duration: Date.now() - weatherStart,
+          ok: false,
+          source: 'Error',
+          error: { message: 'Exception', details: error.message },
+          responsePreview: ''
+        });
+      }
 
-      setWeather(weatherData.weather);
-      setForecastData(weatherData.forecastData);
-      setOceanData(weatherData.oceanData);
-      setTides(tideData);
-      setSunData(astronomyData.sunData);
-      setAstronomy(astronomyData.astronomy);
-      setMoonData(astronomyData.moonData);
-      setSkyData(astronomyData.skyData);
-      setContextData(astronomyData.contextData);
-      setLifestyleData(astronomyData.lifestyleData);
+      // Tides
+      const tideStart = Date.now();
+      const tideStartTime = new Date().toISOString();
+      try {
+        const tideData = await base44.functions.invoke('getTideData', {});
+        const tideEnd = Date.now();
+        setTideResponse(tideData);
+        calls.push({
+          functionName: 'getTideData',
+          startTime: tideStartTime,
+          endTime: new Date().toISOString(),
+          duration: tideEnd - tideStart,
+          ok: tideData.ok,
+          source: tideData.source,
+          lat: tideData.lat,
+          lon: tideData.lon,
+          error: tideData.error,
+          responsePreview: JSON.stringify(tideData).substring(0, 300)
+        });
+      } catch (error) {
+        calls.push({
+          functionName: 'getTideData',
+          startTime: tideStartTime,
+          endTime: new Date().toISOString(),
+          duration: Date.now() - tideStart,
+          ok: false,
+          source: 'Error',
+          error: { message: 'Exception', details: error.message },
+          responsePreview: ''
+        });
+      }
+
+      // Astronomy
+      const astroStart = Date.now();
+      const astroStartTime = new Date().toISOString();
+      try {
+        const astroData = await base44.functions.invoke('getAstronomyData', {});
+        const astroEnd = Date.now();
+        setAstronomyResponse(astroData);
+        calls.push({
+          functionName: 'getAstronomyData',
+          startTime: astroStartTime,
+          endTime: new Date().toISOString(),
+          duration: astroEnd - astroStart,
+          ok: astroData.ok,
+          source: astroData.source,
+          lat: astroData.lat,
+          lon: astroData.lon,
+          error: astroData.error,
+          responsePreview: JSON.stringify(astroData).substring(0, 300)
+        });
+      } catch (error) {
+        calls.push({
+          functionName: 'getAstronomyData',
+          startTime: astroStartTime,
+          endTime: new Date().toISOString(),
+          duration: Date.now() - astroStart,
+          ok: false,
+          source: 'Error',
+          error: { message: 'Exception', details: error.message },
+          responsePreview: ''
+        });
+      }
+
+      // Moon
+      const moonStart = Date.now();
+      const moonStartTime = new Date().toISOString();
+      try {
+        const moonData = await base44.functions.invoke('getMoonData', {});
+        const moonEnd = Date.now();
+        setMoonResponse(moonData);
+        calls.push({
+          functionName: 'getMoonData',
+          startTime: moonStartTime,
+          endTime: new Date().toISOString(),
+          duration: moonEnd - moonStart,
+          ok: moonData.ok,
+          source: moonData.source,
+          lat: moonData.lat,
+          lon: moonData.lon,
+          error: moonData.error,
+          responsePreview: JSON.stringify(moonData).substring(0, 300)
+        });
+      } catch (error) {
+        calls.push({
+          functionName: 'getMoonData',
+          startTime: moonStartTime,
+          endTime: new Date().toISOString(),
+          duration: Date.now() - moonStart,
+          ok: false,
+          source: 'Error',
+          error: { message: 'Exception', details: error.message },
+          responsePreview: ''
+        });
+      }
+
+      // Fun Fact
+      const factStart = Date.now();
+      const factStartTime = new Date().toISOString();
+      try {
+        const factData = await base44.functions.invoke('getFunFact', {});
+        const factEnd = Date.now();
+        setFunFactResponse(factData);
+        calls.push({
+          functionName: 'getFunFact',
+          startTime: factStartTime,
+          endTime: new Date().toISOString(),
+          duration: factEnd - factStart,
+          ok: factData.ok,
+          source: factData.source,
+          lat: factData.lat,
+          lon: factData.lon,
+          error: factData.error,
+          responsePreview: JSON.stringify(factData).substring(0, 300)
+        });
+      } catch (error) {
+        calls.push({
+          functionName: 'getFunFact',
+          startTime: factStartTime,
+          endTime: new Date().toISOString(),
+          duration: Date.now() - factStart,
+          ok: false,
+          source: 'Error',
+          error: { message: 'Exception', details: error.message },
+          responsePreview: ''
+        });
+      }
+
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setIsLoading(false);
+      setApiCalls(calls);
     }
   };
 
   useEffect(() => {
     fetchData();
-    
-    // Refresh data every 30 minutes
     const refreshInterval = setInterval(fetchData, 30 * 60 * 1000);
     return () => clearInterval(refreshInterval);
   }, []);
 
-  // Night mode detection
   useEffect(() => {
     const checkNightMode = () => {
       const hour = new Date().getHours();
       setIsDark(hour < 6 || hour >= 19);
     };
-    
     checkNightMode();
     const interval = setInterval(checkNightMode, 60000);
     return () => clearInterval(interval);
@@ -88,50 +221,61 @@ export default function ExumaDisplay() {
       }`}
       style={{ opacity: isDark ? 0.92 : 1 }}
     >
-      {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute top-1/2 -left-40 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         <div className="absolute -bottom-40 right-1/3 w-72 h-72 bg-amber-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
-      {/* Content */}
       <div className="relative z-10 min-h-screen p-4 md:p-8 lg:p-12">
-        {/* Header with time */}
         <header className="mb-8 md:mb-12">
           <TimeDisplay />
         </header>
 
-        {/* Main data grid */}
         <main className="max-w-[1600px] mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-            {/* Weather Forecast - Full Width */}
             <div className="lg:col-span-3">
-              <WeatherForecastCard forecastData={forecastData} isLoading={isLoading} />
+              <WeatherForecastCard 
+                response={weatherResponse} 
+                isLoading={isLoading} 
+              />
             </div>
             
-            {/* Ocean & Tides */}
-            <OceanRealityCard oceanData={oceanData} isLoading={isLoading} />
-            <TideCard tides={tides} isLoading={isLoading} />
+            <OceanRealityCard 
+              response={weatherResponse} 
+              tideResponse={tideResponse}
+              isLoading={isLoading} 
+            />
+            
+            <TideCard 
+              response={tideResponse} 
+              isLoading={isLoading} 
+            />
 
-            {/* Astronomy & Sun */}
-            <AstronomyCard astronomy={astronomy} isLoading={isLoading} />
+            <AstronomyCard 
+              response={astronomyResponse} 
+              isLoading={isLoading} 
+            />
+            
             <div className="lg:col-span-2">
-              <SunDaylightCard sunData={sunData} isLoading={isLoading} />
+              <SunDaylightCard 
+                response={astronomyResponse} 
+                isLoading={isLoading} 
+              />
             </div>
 
-            {/* Row 3: Moon & sky */}
-            <MoonCard moonData={moonData} isLoading={isLoading} />
-            <div className="lg:col-span-2">
-              <SkySpaceCard skyData={skyData} isLoading={isLoading} />
-            </div>
-            <IslandContextCard contextData={contextData} isLoading={isLoading} />
-
-            {/* Row 4: Lifestyle & fun fact */}
-            <LifestyleCard lifestyleData={lifestyleData} isLoading={isLoading} />
+            <MoonCard 
+              response={moonResponse} 
+              isLoading={isLoading} 
+            />
+            
             <div className="md:col-span-2 lg:col-span-2">
-              <FunFactCard />
+              <FunFactCard 
+                response={funFactResponse} 
+                isLoading={isLoading} 
+              />
             </div>
+            
             <SystemStatusCard 
               lastUpdated={lastUpdated} 
               onRefresh={fetchData} 
@@ -140,6 +284,8 @@ export default function ExumaDisplay() {
           </div>
         </main>
       </div>
+
+      <DebugPanel apiCalls={apiCalls} />
     </div>
   );
 }
