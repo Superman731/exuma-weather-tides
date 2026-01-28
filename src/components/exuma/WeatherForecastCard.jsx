@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cloud, Sun, CloudRain, Wind, Droplets, Thermometer, AlertCircle } from 'lucide-react';
+import { Cloud, Sun, CloudRain, Wind, Droplets, Thermometer, AlertCircle, Zap } from 'lucide-react';
 import CardFooter from './CardFooter';
 
 const weatherIcons = {
@@ -113,6 +113,48 @@ export default function WeatherForecastCard({ response, isLoading }) {
           <p className="text-sky-100/60 text-sm mt-1">Clear</p>
         </div>
       </div>
+
+      {/* Sun Safety */}
+      {(today.uvIndex !== null || today.sunshineDuration !== null) && (
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {today.uvIndex !== null && (
+            <div className={`p-4 rounded-2xl border ${
+              today.uvIndex >= 8 ? 'bg-red-500/10 border-red-500/20' :
+              today.uvIndex >= 6 ? 'bg-orange-500/10 border-orange-500/20' :
+              today.uvIndex >= 3 ? 'bg-yellow-500/10 border-yellow-500/20' :
+              'bg-green-500/10 border-green-500/20'
+            }`}>
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="w-4 h-4" />
+                <p className="text-sky-200/60 text-xs uppercase tracking-wider">UV Index</p>
+              </div>
+              <p className={`text-2xl font-light ${
+                today.uvIndex >= 8 ? 'text-red-300' :
+                today.uvIndex >= 6 ? 'text-orange-300' :
+                today.uvIndex >= 3 ? 'text-yellow-300' :
+                'text-green-300'
+              }`}>
+                {today.uvIndex}
+              </p>
+              <p className="text-sky-100/60 text-xs mt-1">
+                {today.uvIndex >= 8 ? 'Extreme' :
+                 today.uvIndex >= 6 ? 'Very High' :
+                 today.uvIndex >= 3 ? 'Moderate' : 'Low'}
+              </p>
+            </div>
+          )}
+          {today.sunshineDuration !== null && (
+            <div className="p-4 bg-sun-500/10 rounded-2xl border border-yellow-500/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Sun className="w-4 h-4" />
+                <p className="text-sky-200/60 text-xs uppercase tracking-wider">Sunshine</p>
+              </div>
+              <p className="text-white text-2xl font-light">{today.sunshineDuration}h</p>
+              <p className="text-sky-100/60 text-xs mt-1">hours of sun</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 7-Day Forecast */}
       <div>
