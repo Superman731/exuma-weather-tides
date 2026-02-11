@@ -101,7 +101,7 @@ export default function WeatherForecastCard({ response, isLoading }) {
       </div>
 
       {/* Today Split */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20">
           <p className="text-sky-200/60 text-xs uppercase tracking-wider mb-2">Today High</p>
           <p className="text-white text-3xl font-light">{today.tempHigh}°</p>
@@ -112,6 +112,16 @@ export default function WeatherForecastCard({ response, isLoading }) {
           <p className="text-white text-3xl font-light">{today.tempLow}°</p>
           <p className="text-sky-100/60 text-sm mt-1">Clear</p>
         </div>
+        {today.windGusts !== null && (
+          <div className="p-4 bg-cyan-500/10 rounded-2xl border border-cyan-500/20">
+            <div className="flex items-center gap-2 mb-2">
+              <Wind className="w-4 h-4" />
+              <p className="text-sky-200/60 text-xs uppercase tracking-wider">Wind Gusts</p>
+            </div>
+            <p className="text-white text-3xl font-light">{today.windGusts}</p>
+            <p className="text-sky-100/60 text-sm mt-1">mph max</p>
+          </div>
+        )}
       </div>
 
       {/* Sun Safety */}
@@ -172,6 +182,12 @@ export default function WeatherForecastCard({ response, isLoading }) {
                 </p>
                 {day.rainChance > 0 && (
                   <p className="text-sky-300/60 text-xs mt-1">{day.rainChance}%</p>
+                )}
+                {day.windGusts && (
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    <Wind className="w-3 h-3 text-cyan-300/70" />
+                    <p className="text-cyan-300/70 text-xs">{day.windGusts} mph</p>
+                  </div>
                 )}
               </div>
             );

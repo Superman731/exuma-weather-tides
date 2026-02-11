@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
 
     // Weather
     if (bodyAction === 'weather') {
-      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl,uv_index,sunshine_duration&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max,sunshine_duration&timezone=America%2FNassau&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=7`;
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl,uv_index,sunshine_duration&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max,sunshine_duration,wind_gusts_10m_max&timezone=America%2FNassau&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=7`;
 
       // Get water temperature from Open-Meteo Marine API
       const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_direction,wave_period,ocean_current_velocity,ocean_current_direction&hourly=sea_surface_temperature&timezone=America%2FNassau&temperature_unit=fahrenheit`;
@@ -61,7 +61,8 @@ Deno.serve(async (req) => {
         low: data.daily.temperature_2m_min[i],
         rainChance: data.daily.precipitation_probability_max[i] || 0,
         uvIndex: data.daily.uv_index_max[i] || null,
-        sunshineDuration: data.daily.sunshine_duration[i] || null
+        sunshineDuration: data.daily.sunshine_duration[i] || null,
+        windGusts: data.daily.wind_gusts_10m_max[i] ? Math.round(data.daily.wind_gusts_10m_max[i]) : null
       })) || [];
 
       return Response.json({
@@ -91,7 +92,8 @@ Deno.serve(async (req) => {
             tempLow: dailyData[0]?.low || 0,
             condition: dailyData[0]?.condition || 'Unknown',
             uvIndex: dailyData[0]?.uvIndex || null,
-            sunshineDuration: dailyData[0]?.sunshineDuration ? (dailyData[0].sunshineDuration / 3600).toFixed(1) : null
+            sunshineDuration: dailyData[0]?.sunshineDuration ? (dailyData[0].sunshineDuration / 3600).toFixed(1) : null,
+            windGusts: dailyData[0]?.windGusts || null
           },
           forecast: dailyData.slice(1, 7)
         }
